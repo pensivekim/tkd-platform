@@ -289,7 +289,10 @@ export default function Home() {
                   {layer.price && <p style={{ color: "#E9C46A", marginTop: 8, fontWeight: 700 }}>{layer.price}</p>}
                   {layer.available && (
                     <div style={{ marginTop: 14, display: "flex", gap: 10, flexWrap: "wrap" }}>
-                      <Link href="/exam" style={{ padding: "8px 18px", background: "rgba(230,57,70,0.15)", color: "#E63946", border: "1px solid rgba(230,57,70,0.3)", borderRadius: 8, textDecoration: "none", fontSize: 13 }}>
+                      <Link href="/poomsae" style={{ padding: "8px 18px", background: "rgba(230,57,70,0.15)", color: "#E63946", border: "1px solid rgba(230,57,70,0.3)", borderRadius: 8, textDecoration: "none", fontSize: 13, fontWeight: 700 }}>
+                        🥋 {t("poomsae.tryNow")}
+                      </Link>
+                      <Link href="/exam" style={{ padding: "8px 18px", background: "rgba(230,57,70,0.10)", color: "#E63946", border: "1px solid rgba(230,57,70,0.2)", borderRadius: 8, textDecoration: "none", fontSize: 13 }}>
                         {t("nav.remoteExam")} →
                       </Link>
                       <Link href="/training" style={{ padding: "8px 18px", background: "rgba(233,196,106,0.12)", color: "#E9C46A", border: "1px solid rgba(233,196,106,0.3)", borderRadius: 8, textDecoration: "none", fontSize: 13 }}>

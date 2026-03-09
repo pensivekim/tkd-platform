@@ -9,7 +9,7 @@ import PoseOverlay from "@/components/ai/PoseOverlay";
 import ScorePanel from "@/components/exam/ScorePanel";
 import { useWebRTC } from "@/lib/useWebRTC";
 import type { Landmark } from "@/lib/pose-scoring";
-import { computePoseScore, resetStability } from "@/lib/pose-scoring";
+import { computePoomsaeScore, resetPoomsaeScore } from "@/lib/pose-scoring";
 import { API_BASE } from "@/lib/api";
 
 interface Session {
@@ -28,7 +28,7 @@ export default function ExaminerPage({ params }: { params: Promise<{ sessionId: 
   const [landmarks, setLandmarks] = useState<Landmark[] | null>(null);
   const [micOn, setMicOn] = useState(true);
   const [camOn, setCamOn] = useState(true);
-  const [aiScore, setAiScore] = useState({ total: 0, visibility: 0, symmetry: 0, stability: 0 });
+  const [aiScore, setAiScore] = useState({ total: 0, accuracy: 0, symmetry: 0, stability: 0, timing: 0, completeness: 0 });
   const remoteVideoRef = useRef<HTMLVideoElement>(null);
 
   const handleDataChannel = useCallback((channel: RTCDataChannel) => {
@@ -36,7 +36,7 @@ export default function ExaminerPage({ params }: { params: Promise<{ sessionId: 
       try {
         const lms: Landmark[] = JSON.parse(e.data);
         setLandmarks(lms);
-        setAiScore(computePoseScore(lms));
+        setAiScore(computePoomsaeScore(lms));
       } catch {}
     };
   }, []);
@@ -55,7 +55,7 @@ export default function ExaminerPage({ params }: { params: Promise<{ sessionId: 
   }, [sessionId]);
 
   useEffect(() => {
-    resetStability();
+    resetPoomsaeScore();
     start();
     return () => stop();
   }, [start, stop]);

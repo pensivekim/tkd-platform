@@ -4,9 +4,19 @@ import { useState } from "react";
 import PoseScore from "@/components/ai/PoseScore";
 import { API_BASE } from "@/lib/api";
 
+interface AiScore {
+  total: number;
+  visibility?: number;
+  symmetry?: number;
+  stability?: number;
+  accuracy?: number;
+  timing?: number;
+  completeness?: number;
+}
+
 interface ScorePanelProps {
   sessionId: string;
-  aiScore: { total: number; visibility: number; symmetry: number; stability: number };
+  aiScore: AiScore;
   onSubmit?: (score: number, result: "pass" | "fail") => void;
 }
 

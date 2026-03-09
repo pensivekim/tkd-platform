@@ -1,3 +1,5 @@
+import type { PoomsaeData, PoomsaeMove, JointKey } from "./poomsae-data";
+
 export interface Landmark {
   x: number;
   y: number;
@@ -6,7 +8,7 @@ export interface Landmark {
 }
 
 // MediaPipe Pose landmark indices
-const LANDMARKS = {
+const LM = {
   LEFT_SHOULDER: 11, RIGHT_SHOULDER: 12,
   LEFT_ELBOW: 13, RIGHT_ELBOW: 14,
   LEFT_WRIST: 15, RIGHT_WRIST: 16,
@@ -15,8 +17,8 @@ const LANDMARKS = {
   LEFT_ANKLE: 27, RIGHT_ANKLE: 28,
 };
 
-// 두 랜드마크 간 각도 계산
-function angle(a: Landmark, b: Landmark, c: Landmark): number {
+// ── Core angle calculation ────────────────────────────────────────
+export function calculateAngle(a: Landmark, b: Landmark, c: Landmark): number {
   const ab = { x: b.x - a.x, y: b.y - a.y };
   const cb = { x: b.x - c.x, y: b.y - c.y };
   const dot = ab.x * cb.x + ab.y * cb.y;
@@ -26,22 +28,46 @@ function angle(a: Landmark, b: Landmark, c: Landmark): number {
   return Math.acos(Math.max(-1, Math.min(1, dot / (magAB * magCB)))) * (180 / Math.PI);
 }
 
-// 가시성 점수 (키포인트가 잘 보이는지)
+// Internal alias for backward compat
+function angle(a: Landmark, b: Landmark, c: Landmark): number {
+  return calculateAngle(a, b, c);
+}
+
+// Get angle for a named joint key
+function getJointAngle(landmarks: Landmark[], joint: JointKey): number | null {
+  try {
+    switch (joint) {
+      case "leftElbow":
+        return angle(landmarks[LM.LEFT_SHOULDER], landmarks[LM.LEFT_ELBOW], landmarks[LM.LEFT_WRIST]);
+      case "rightElbow":
+        return angle(landmarks[LM.RIGHT_SHOULDER], landmarks[LM.RIGHT_ELBOW], landmarks[LM.RIGHT_WRIST]);
+      case "leftKnee":
+        return angle(landmarks[LM.LEFT_HIP], landmarks[LM.LEFT_KNEE], landmarks[LM.LEFT_ANKLE]);
+      case "rightKnee":
+        return angle(landmarks[LM.RIGHT_HIP], landmarks[LM.RIGHT_KNEE], landmarks[LM.RIGHT_ANKLE]);
+      default:
+        return null;
+    }
+  } catch {
+    return null;
+  }
+}
+
+// ── 3-item scores (backward compat) ──────────────────────────────
 export function visibilityScore(landmarks: Landmark[]): number {
-  const keyIndices = Object.values(LANDMARKS);
+  const keyIndices = Object.values(LM);
   const visible = keyIndices.filter(i => landmarks[i] && (landmarks[i].visibility ?? 1) > 0.5);
   return Math.round((visible.length / keyIndices.length) * 100);
 }
 
-// 좌우 대칭도 점수
 export function symmetryScore(landmarks: Landmark[]): number {
   const pairs: [number, number][] = [
-    [LANDMARKS.LEFT_SHOULDER, LANDMARKS.RIGHT_SHOULDER],
-    [LANDMARKS.LEFT_ELBOW, LANDMARKS.RIGHT_ELBOW],
-    [LANDMARKS.LEFT_WRIST, LANDMARKS.RIGHT_WRIST],
-    [LANDMARKS.LEFT_HIP, LANDMARKS.RIGHT_HIP],
-    [LANDMARKS.LEFT_KNEE, LANDMARKS.RIGHT_KNEE],
-    [LANDMARKS.LEFT_ANKLE, LANDMARKS.RIGHT_ANKLE],
+    [LM.LEFT_SHOULDER, LM.RIGHT_SHOULDER],
+    [LM.LEFT_ELBOW, LM.RIGHT_ELBOW],
+    [LM.LEFT_WRIST, LM.RIGHT_WRIST],
+    [LM.LEFT_HIP, LM.RIGHT_HIP],
+    [LM.LEFT_KNEE, LM.RIGHT_KNEE],
+    [LM.LEFT_ANKLE, LM.RIGHT_ANKLE],
   ];
 
   let totalDiff = 0;
@@ -61,7 +87,6 @@ export function symmetryScore(landmarks: Landmark[]): number {
   return Math.max(0, Math.round(100 - avgDiff * 300));
 }
 
-// 자세 안정성 점수 (이전 프레임과의 움직임 비교)
 let prevLandmarks: Landmark[] | null = null;
 export function stabilityScore(landmarks: Landmark[]): number {
   if (!prevLandmarks) {
@@ -69,7 +94,7 @@ export function stabilityScore(landmarks: Landmark[]): number {
     return 85;
   }
 
-  const keyIndices = Object.values(LANDMARKS);
+  const keyIndices = Object.values(LM);
   let totalMove = 0;
   let count = 0;
 
@@ -91,7 +116,7 @@ export function resetStability() {
   prevLandmarks = null;
 }
 
-// 종합 AI 참고 점수
+// Original 3-item function (backward compat — used by exam/training pages)
 export function computePoseScore(landmarks: Landmark[]): {
   total: number;
   visibility: number;
@@ -103,4 +128,205 @@ export function computePoseScore(landmarks: Landmark[]): {
   const sta = stabilityScore(landmarks);
   const total = Math.round(vis * 0.3 + sym * 0.4 + sta * 0.3);
   return { total, visibility: vis, symmetry: sym, stability: sta };
+}
+
+// ── 5-item score (new) ────────────────────────────────────────────
+export interface PoomsaeScore {
+  total: number;
+  accuracy: number;    // pose angle quality
+  symmetry: number;    // left-right balance
+  stability: number;   // movement steadiness
+  timing: number;      // rhythm consistency
+  completeness: number; // visible keypoints / sequence completion
+}
+
+// General accuracy: checks if key body angles are within "good form" ranges
+function accuracyScore(landmarks: Landmark[]): number {
+  const checks: Array<{ val: number | null; ideal: number; tol: number }> = [
+    // Arm extension check (should not be hyper-extended or fully collapsed)
+    { val: getJointAngle(landmarks, "leftElbow"), ideal: 140, tol: 40 },
+    { val: getJointAngle(landmarks, "rightElbow"), ideal: 140, tol: 40 },
+    // Knee check (some bend in stance — not locked straight or fully crouched)
+    { val: getJointAngle(landmarks, "leftKnee"), ideal: 130, tol: 40 },
+    { val: getJointAngle(landmarks, "rightKnee"), ideal: 130, tol: 40 },
+  ];
+
+  let total = 0;
+  let count = 0;
+  for (const c of checks) {
+    if (c.val === null) continue;
+    const diff = Math.abs(c.val - c.ideal);
+    total += Math.max(0, 100 - (diff / c.tol) * 100);
+    count++;
+  }
+  return count === 0 ? 75 : Math.round(total / count);
+}
+
+// Timing history for compute5
+const timingHistory: number[] = [];
+
+export function computePoomsaeScore(landmarks: Landmark[]): PoomsaeScore {
+  const acc = accuracyScore(landmarks);
+  const sym = symmetryScore(landmarks);
+  const sta = stabilityScore(landmarks);
+  const comp = visibilityScore(landmarks);
+
+  // Timing = smoothness of movement (higher stability over time = better rhythm)
+  timingHistory.push(sta);
+  if (timingHistory.length > 30) timingHistory.shift();
+  const timingVariance = timingHistory.length > 1
+    ? Math.sqrt(timingHistory.reduce((s, v) => s + (v - 80) ** 2, 0) / timingHistory.length)
+    : 20;
+  const tim = Math.max(0, Math.min(100, Math.round(100 - timingVariance * 0.8)));
+
+  const total = Math.round(acc * 0.30 + sym * 0.25 + sta * 0.20 + tim * 0.15 + comp * 0.10);
+  return { total, accuracy: acc, symmetry: sym, stability: sta, timing: tim, completeness: comp };
+}
+
+export function resetPoomsaeScore() {
+  timingHistory.length = 0;
+  prevLandmarks = null;
+}
+
+// ── PoomsaeScoringEngine — tracks move sequence ───────────────────
+export interface PoomsaeScoringResult {
+  accuracy: number;
+  symmetry: number;
+  stability: number;
+  timing: number;
+  completeness: number;
+  total: number;
+  currentMoveIndex: number;
+  currentMoveName: string;
+  advanced: boolean;
+  done: boolean;
+}
+
+function computeMoveAccuracy(landmarks: Landmark[], move: PoomsaeMove): number {
+  if (!move.angles.length) return 80;
+  let totalScore = 0;
+  let count = 0;
+  for (const constraint of move.angles) {
+    const val = getJointAngle(landmarks, constraint.joint);
+    if (val === null) continue;
+    const diff = Math.abs(val - constraint.target);
+    totalScore += Math.max(0, 100 - (diff / constraint.tolerance) * 100);
+    count++;
+  }
+  return count === 0 ? 70 : totalScore / count;
+}
+
+function avg(arr: number[]): number {
+  if (!arr.length) return 75;
+  return arr.reduce((a, b) => a + b, 0) / arr.length;
+}
+
+export class PoomsaeScoringEngine {
+  private poomsae: PoomsaeData;
+  private moveIndex = 0;
+  private moveHoldStart: number | null = null;
+  private accHistory: number[] = [];
+  private symHistory: number[] = [];
+  private staHistory: number[] = [];
+  private moveTimings: Array<{ actual: number; expected: number }> = [];
+  private prevLandmarksLocal: Landmark[] | null = null;
+
+  constructor(poomsae: PoomsaeData) {
+    this.poomsae = poomsae;
+  }
+
+  reset() {
+    this.moveIndex = 0;
+    this.moveHoldStart = null;
+    this.accHistory = [];
+    this.symHistory = [];
+    this.staHistory = [];
+    this.moveTimings = [];
+    this.prevLandmarksLocal = null;
+  }
+
+  process(landmarks: Landmark[], timestamp: number): PoomsaeScoringResult {
+    const done = this.moveIndex >= this.poomsae.moves.length;
+
+    const sym = symmetryScore(landmarks);
+    const sta = this.localStability(landmarks);
+    this.symHistory.push(sym);
+    this.staHistory.push(sta);
+
+    let accuracy = 75;
+    let advanced = false;
+
+    if (!done) {
+      const move = this.poomsae.moves[this.moveIndex];
+      const moveAcc = computeMoveAccuracy(landmarks, move);
+      this.accHistory.push(moveAcc);
+      accuracy = moveAcc;
+
+      if (moveAcc >= 60) {
+        if (!this.moveHoldStart) {
+          this.moveHoldStart = timestamp;
+        } else if (timestamp - this.moveHoldStart >= move.durationMs) {
+          this.moveTimings.push({ actual: timestamp - this.moveHoldStart, expected: move.durationMs });
+          this.moveIndex++;
+          this.moveHoldStart = null;
+          advanced = true;
+        }
+      } else {
+        this.moveHoldStart = null;
+      }
+    }
+
+    const completeness = Math.round((this.moveIndex / this.poomsae.moves.length) * 100);
+    const avgAcc = Math.round(avg(this.accHistory));
+    const avgSym = Math.round(avg(this.symHistory));
+    const avgSta = Math.round(avg(this.staHistory));
+    const timing = this.computeTimingScore();
+    const total = Math.round(avgAcc * 0.35 + avgSym * 0.25 + avgSta * 0.20 + timing * 0.10 + completeness * 0.10);
+
+    const currentMoveIndex = Math.min(this.moveIndex, this.poomsae.moves.length - 1);
+    const currentMoveName = this.poomsae.moves[currentMoveIndex]?.nameKo ?? "";
+
+    return {
+      accuracy: done ? avgAcc : Math.round(accuracy),
+      symmetry: avgSym,
+      stability: avgSta,
+      timing,
+      completeness,
+      total,
+      currentMoveIndex: this.moveIndex,
+      currentMoveName,
+      advanced,
+      done: this.moveIndex >= this.poomsae.moves.length,
+    };
+  }
+
+  private localStability(landmarks: Landmark[]): number {
+    if (!this.prevLandmarksLocal) {
+      this.prevLandmarksLocal = landmarks;
+      return 85;
+    }
+    const keyIndices = Object.values(LM);
+    let totalMove = 0;
+    let count = 0;
+    for (const i of keyIndices) {
+      if (!landmarks[i] || !this.prevLandmarksLocal[i]) continue;
+      const dx = landmarks[i].x - this.prevLandmarksLocal[i].x;
+      const dy = landmarks[i].y - this.prevLandmarksLocal[i].y;
+      totalMove += Math.sqrt(dx ** 2 + dy ** 2);
+      count++;
+    }
+    this.prevLandmarksLocal = landmarks;
+    if (count === 0) return 85;
+    return Math.max(0, Math.min(100, Math.round(100 - (totalMove / count) * 1000)));
+  }
+
+  private computeTimingScore(): number {
+    if (!this.moveTimings.length) return 80;
+    let total = 0;
+    for (const { actual, expected } of this.moveTimings) {
+      const diff = Math.abs(actual - expected);
+      total += Math.max(0, 100 - (diff / expected) * 100);
+    }
+    return Math.round(total / this.moveTimings.length);
+  }
 }

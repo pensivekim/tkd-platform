@@ -2,9 +2,14 @@
 
 interface PoseScoreProps {
   total: number;
-  visibility: number;
-  symmetry: number;
-  stability: number;
+  // 3-item mode (backward compat)
+  visibility?: number;
+  symmetry?: number;
+  stability?: number;
+  // 5-item mode (poomsae)
+  accuracy?: number;
+  timing?: number;
+  completeness?: number;
 }
 
 function ScoreBar({ value, color }: { value: number; color: string }) {
@@ -15,8 +20,27 @@ function ScoreBar({ value, color }: { value: number; color: string }) {
   );
 }
 
-export default function PoseScore({ total, visibility, symmetry, stability }: PoseScoreProps) {
+export default function PoseScore({
+  total, visibility, symmetry, stability, accuracy, timing, completeness
+}: PoseScoreProps) {
   const totalColor = total >= 80 ? "#4ade80" : total >= 60 ? "#E9C46A" : "#E63946";
+  const fiveItem = accuracy !== undefined || timing !== undefined || completeness !== undefined;
+
+  const items5 = [
+    { label: "정확도", value: accuracy ?? 0, color: "#E63946" },
+    { label: "대칭도", value: symmetry ?? 0, color: "#E9C46A" },
+    { label: "안정성", value: stability ?? 0, color: "#7EC8E3" },
+    { label: "타이밍", value: timing ?? 0, color: "#4ade80" },
+    { label: "완성도", value: completeness ?? 0, color: "#A78BFA" },
+  ];
+
+  const items3 = [
+    { label: "가시성", value: visibility ?? 0, color: "#4ade80" },
+    { label: "대칭도", value: symmetry ?? 0, color: "#E9C46A" },
+    { label: "안정성", value: stability ?? 0, color: "#7EC8E3" },
+  ];
+
+  const items = fiveItem ? items5 : items3;
 
   return (
     <div style={{
@@ -33,24 +57,15 @@ export default function PoseScore({ total, visibility, symmetry, stability }: Po
       </div>
 
       <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-        <div>
-          <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, color: "#909090" }}>
-            <span>가시성</span><span style={{ color: "#A0F0C0" }}>{visibility}</span>
+        {items.map(item => (
+          <div key={item.label}>
+            <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, color: "#909090" }}>
+              <span>{item.label}</span>
+              <span style={{ color: item.color }}>{item.value}</span>
+            </div>
+            <ScoreBar value={item.value} color={item.color} />
           </div>
-          <ScoreBar value={visibility} color="#4ade80" />
-        </div>
-        <div>
-          <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, color: "#909090" }}>
-            <span>대칭도</span><span style={{ color: "#E9C46A" }}>{symmetry}</span>
-          </div>
-          <ScoreBar value={symmetry} color="#E9C46A" />
-        </div>
-        <div>
-          <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, color: "#909090" }}>
-            <span>안정성</span><span style={{ color: "#7EC8E3" }}>{stability}</span>
-          </div>
-          <ScoreBar value={stability} color="#7EC8E3" />
-        </div>
+        ))}
       </div>
     </div>
   );
