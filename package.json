@@ -5,7 +5,8 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start"
+    "start": "next start",
+    "pages:deploy": "next build && npx wrangler@4 pages deploy .next --project-name tkd-platform"
   },
   "dependencies": {
     "next": "16.1.6",
