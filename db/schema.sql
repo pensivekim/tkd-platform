@@ -30,3 +30,32 @@ CREATE TABLE IF NOT EXISTS webrtc_signals (
   data TEXT NOT NULL,
   created_at TEXT DEFAULT (datetime('now'))
 );
+
+CREATE TABLE IF NOT EXISTS training_sessions (
+  id TEXT PRIMARY KEY,
+  instructor_name TEXT NOT NULL,
+  title TEXT NOT NULL,
+  poomsae_type TEXT NOT NULL,
+  max_trainees INTEGER DEFAULT 30,
+  status TEXT DEFAULT 'waiting',
+  created_at TEXT DEFAULT (datetime('now'))
+);
+
+CREATE TABLE IF NOT EXISTS training_participants (
+  id TEXT PRIMARY KEY,
+  session_id TEXT NOT NULL,
+  trainee_name TEXT NOT NULL,
+  dojang_name TEXT,
+  score REAL DEFAULT 0,
+  joined_at TEXT DEFAULT (datetime('now'))
+);
+
+CREATE TABLE IF NOT EXISTS training_signals (
+  id TEXT PRIMARY KEY,
+  session_id TEXT NOT NULL,
+  from_id TEXT NOT NULL,
+  to_id TEXT NOT NULL,
+  type TEXT NOT NULL,
+  data TEXT NOT NULL,
+  created_at TEXT DEFAULT (datetime('now'))
+);

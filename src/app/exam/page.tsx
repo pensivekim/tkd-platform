@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useI18n } from "@/lib/i18n";
 import { API_BASE } from "@/lib/api";
 
 interface ExamSession {
@@ -23,13 +24,8 @@ const statusColors: Record<string, string> = {
   completed: "#7EC8E3",
 };
 
-const statusLabels: Record<string, string> = {
-  waiting: "대기 중",
-  active: "진행 중",
-  completed: "완료",
-};
-
 export default function ExamPage() {
+  const { t } = useI18n();
   const [sessions, setSessions] = useState<ExamSession[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -40,34 +36,41 @@ export default function ExamPage() {
       .catch(() => setLoading(false));
   }, []);
 
+  const statusLabels: Record<string, string> = {
+    waiting: t("exam.waiting"),
+    active: t("exam.active"),
+    completed: t("exam.completed"),
+  };
+
   return (
     <div style={{ background: "#0A0A0F", minHeight: "100vh", fontFamily: "'Outfit', sans-serif", color: "#F0F0F5" }}>
-      {/* Header */}
       <div style={{ borderBottom: "1px solid rgba(255,255,255,0.07)", padding: "16px 24px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          <Link href="/" style={{ color: "#E63946", textDecoration: "none", fontSize: 13 }}>← 홈</Link>
+          <Link href="/" style={{ color: "#E63946", textDecoration: "none", fontSize: 13 }}>{t("common.backToHome")}</Link>
           <span style={{ color: "#404050" }}>|</span>
-          <span style={{ fontSize: 16, fontWeight: 700 }}>🥋 원격 승단 심사</span>
+          <span style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 18, letterSpacing: 2, color: "#E9C46A" }}>DOJANGWAN</span>
+          <span style={{ color: "#404050" }}>|</span>
+          <span style={{ fontSize: 16, fontWeight: 700 }}>🥋 {t("exam.title")}</span>
         </div>
         <Link href="/exam/create"
           style={{ padding: "8px 20px", background: "#E63946", color: "#fff", borderRadius: 8, textDecoration: "none", fontSize: 14, fontWeight: 700 }}>
-          + 새 심사 세션
+          + {t("exam.createSession")}
         </Link>
       </div>
 
       <div style={{ maxWidth: 900, margin: "40px auto", padding: "0 24px" }}>
-        <h1 style={{ fontSize: 28, fontWeight: 700, marginBottom: 8 }}>심사 대시보드</h1>
+        <h1 style={{ fontSize: 28, fontWeight: 700, marginBottom: 8 }}>{t("exam.title")}</h1>
         <p style={{ color: "#606070", marginBottom: 32 }}>진행 중 및 완료된 심사 세션을 관리합니다.</p>
 
         {loading ? (
-          <div style={{ textAlign: "center", padding: 60, color: "#404050" }}>불러오는 중...</div>
+          <div style={{ textAlign: "center", padding: 60, color: "#404050" }}>{t("common.loading")}</div>
         ) : sessions.length === 0 ? (
           <div style={{ textAlign: "center", padding: 60, color: "#404050" }}>
             <div style={{ fontSize: 40, marginBottom: 12 }}>🥋</div>
             <p>아직 심사 세션이 없습니다.</p>
             <Link href="/exam/create"
               style={{ display: "inline-block", marginTop: 16, padding: "10px 24px", background: "#E63946", color: "#fff", borderRadius: 8, textDecoration: "none", fontWeight: 700 }}>
-              첫 심사 세션 생성
+              {t("exam.createSession")}
             </Link>
           </div>
         ) : (
@@ -90,16 +93,16 @@ export default function ExamPage() {
                     <span style={{ fontSize: 13, color: "#606070" }}>{s.dan_level}단</span>
                   </div>
                   <div style={{ fontSize: 13, color: "#808090" }}>
-                    심사위원: {s.examiner_name} · {new Date(s.created_at).toLocaleString("ko-KR")}
+                    {t("exam.examinerName")}: {s.examiner_name} · {new Date(s.created_at).toLocaleString("ko-KR")}
                   </div>
                   {s.final_result && (
                     <div style={{ marginTop: 6, fontSize: 13 }}>
                       <span style={{ color: "#606070" }}>결과: </span>
                       <span style={{ color: s.final_result === "pass" ? "#4ade80" : "#E63946", fontWeight: 700 }}>
-                        {s.final_result === "pass" ? "합격" : "불합격"}
+                        {s.final_result === "pass" ? t("exam.pass") : t("exam.fail")}
                       </span>
-                      {s.examiner_score !== null && <span style={{ color: "#606070" }}> · 심사 {s.examiner_score}점</span>}
-                      {s.ai_score !== null && <span style={{ color: "#606070" }}> · AI {s.ai_score}점</span>}
+                      {s.examiner_score !== null && <span style={{ color: "#606070" }}> · {t("exam.examinerScore")} {s.examiner_score}점</span>}
+                      {s.ai_score !== null && <span style={{ color: "#606070" }}> · {t("exam.aiScore")} {s.ai_score}점</span>}
                     </div>
                   )}
                 </div>

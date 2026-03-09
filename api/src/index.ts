@@ -107,6 +107,113 @@ export default {
         }
       }
 
+      // ─── Training Sessions ────────────────────────────────────────
+      if (pathname === "/api/training") {
+        if (request.method === "GET") {
+          const rows = await env.DB.prepare(
+            "SELECT * FROM training_sessions ORDER BY created_at DESC LIMIT 50"
+          ).all();
+          return json(rows.results);
+        }
+        if (request.method === "POST") {
+          const body = await request.json() as { instructor_name: string; title: string; poomsae_type: string; max_trainees?: number };
+          const id = crypto.randomUUID();
+          await env.DB.prepare(
+            "INSERT INTO training_sessions (id, instructor_name, title, poomsae_type, max_trainees) VALUES (?, ?, ?, ?, ?)"
+          ).bind(id, body.instructor_name, body.title, body.poomsae_type, body.max_trainees ?? 30).run();
+          return json({ id, instructor_name: body.instructor_name, title: body.title, poomsae_type: body.poomsae_type, status: "waiting" });
+        }
+      }
+
+      // GET /api/training/:id
+      const trainingMatch = pathname.match(/^\/api\/training\/([^/]+)$/);
+      if (trainingMatch && request.method === "GET") {
+        const id = trainingMatch[1];
+        const row = await env.DB.prepare("SELECT * FROM training_sessions WHERE id = ?").bind(id).first();
+        return row ? json(row) : error("Not found", 404);
+      }
+
+      // POST /api/training/:id/join
+      const joinMatch = pathname.match(/^\/api\/training\/([^/]+)\/join$/);
+      if (joinMatch && request.method === "POST") {
+        const sessionId = joinMatch[1];
+        const body = await request.json() as { trainee_name: string; dojang_name?: string };
+        const id = crypto.randomUUID();
+        await env.DB.prepare(
+          "INSERT INTO training_participants (id, session_id, trainee_name, dojang_name) VALUES (?, ?, ?, ?)"
+        ).bind(id, sessionId, body.trainee_name, body.dojang_name ?? "").run();
+        return json({ id, session_id: sessionId, trainee_name: body.trainee_name });
+      }
+
+      // GET /api/training/:id/participants
+      const participantsMatch = pathname.match(/^\/api\/training\/([^/]+)\/participants$/);
+      if (participantsMatch && request.method === "GET") {
+        const sessionId = participantsMatch[1];
+        const rows = await env.DB.prepare(
+          "SELECT * FROM training_participants WHERE session_id = ? ORDER BY joined_at ASC"
+        ).bind(sessionId).all();
+        return json(rows.results);
+      }
+
+      // Training signaling: GET + POST /api/training/:id/signal
+      const signalMatch = pathname.match(/^\/api\/training\/([^/]+)\/signal$/);
+      if (signalMatch) {
+        const sessionId = signalMatch[1];
+
+        if (request.method === "GET") {
+          const toId = url.searchParams.get("to_id");
+          const fromId = url.searchParams.get("from_id");
+          const type = url.searchParams.get("type");
+          const after = url.searchParams.get("after");
+
+          if (!toId || !type) return error("to_id and type required", 400);
+
+          if (type === "offer") {
+            // Return all unprocessed offers sent to instructor
+            const rows = await env.DB.prepare(
+              "SELECT * FROM training_signals WHERE session_id = ? AND to_id = ? AND type = 'offer' ORDER BY created_at ASC"
+            ).bind(sessionId, toId).all();
+            return json(rows.results);
+          }
+
+          if (type === "answer") {
+            const row = await env.DB.prepare(
+              "SELECT * FROM training_signals WHERE session_id = ? AND to_id = ? AND from_id = ? AND type = 'answer' ORDER BY created_at DESC LIMIT 1"
+            ).bind(sessionId, toId, fromId ?? "").first();
+            return json(row || null);
+          }
+
+          if (type === "ice-candidate" || type === "ice-candidate-to-trainee") {
+            const rows = await env.DB.prepare(
+              "SELECT * FROM training_signals WHERE session_id = ? AND to_id = ? AND from_id = ? AND type = ? AND created_at > ? ORDER BY created_at ASC"
+            ).bind(sessionId, toId, fromId ?? "", type, after ?? new Date(0).toISOString()).all();
+            return json(rows.results);
+          }
+
+          return json([]);
+        }
+
+        if (request.method === "POST") {
+          const body = await request.json() as { from_id: string; to_id: string; type: string; data: string };
+          const id = crypto.randomUUID();
+          await env.DB.prepare(
+            "INSERT INTO training_signals (id, session_id, from_id, to_id, type, data) VALUES (?, ?, ?, ?, ?, ?)"
+          ).bind(id, sessionId, body.from_id, body.to_id, body.type, body.data).run();
+          return json({ id });
+        }
+      }
+
+      // PUT /api/training/:id/score
+      const scoreMatch = pathname.match(/^\/api\/training\/([^/]+)\/score$/);
+      if (scoreMatch && request.method === "PUT") {
+        const sessionId = scoreMatch[1];
+        const body = await request.json() as { participant_id: string; score: number };
+        await env.DB.prepare(
+          "UPDATE training_participants SET score = ? WHERE id = ? AND session_id = ?"
+        ).bind(body.score, body.participant_id, sessionId).run();
+        return json({ ok: true });
+      }
+
       return error("Not found", 404);
     } catch (e) {
       console.error(e);

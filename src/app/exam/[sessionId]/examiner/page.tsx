@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { use } from "react";
 import Link from "next/link";
+import { useI18n } from "@/lib/i18n";
 import VideoPlayer from "@/components/webrtc/VideoPlayer";
 import PoseOverlay from "@/components/ai/PoseOverlay";
 import ScorePanel from "@/components/exam/ScorePanel";
@@ -22,6 +23,7 @@ interface Session {
 
 export default function ExaminerPage({ params }: { params: Promise<{ sessionId: string }> }) {
   const { sessionId } = use(params);
+  const { t } = useI18n();
   const [session, setSession] = useState<Session | null>(null);
   const [landmarks, setLandmarks] = useState<Landmark[] | null>(null);
   const [micOn, setMicOn] = useState(true);
@@ -73,7 +75,9 @@ export default function ExaminerPage({ params }: { params: Promise<{ sessionId: 
       <div style={{ borderBottom: "1px solid rgba(255,255,255,0.07)", padding: "12px 20px", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 8 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
           <Link href="/exam" style={{ color: "#E63946", textDecoration: "none", fontSize: 13 }}>← 목록</Link>
-          <span style={{ fontWeight: 700 }}>🥋 심사위원 화면</span>
+          <span style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 18, letterSpacing: 2, color: "#E9C46A" }}>DOJANGWAN</span>
+          <span style={{ color: "#404050" }}>|</span>
+          <span style={{ fontWeight: 700 }}>🥋 {t("exam.title")} — 심사위원</span>
         </div>
         {session && (
           <div style={{ fontSize: 13, color: "#909090" }}>
@@ -112,11 +116,11 @@ export default function ExaminerPage({ params }: { params: Promise<{ sessionId: 
                   color: connectionState === "connected" ? "#4ade80" : connectionState === "connecting" ? "#facc15" : "#E63946",
                 }}>
                   <span style={{ width: 7, height: 7, borderRadius: "50%", background: "currentColor", display: "inline-block" }} />
-                  {connectionState === "connected" ? "연결됨" : connectionState === "connecting" ? "연결 중..." : "대기"}
+                  {connectionState === "connected" ? t("exam.connected") : connectionState === "connecting" ? t("exam.connecting") : t("exam.disconnected")}
                 </span>
               </div>
               <div style={{ position: "absolute", bottom: 8, left: 8, background: "rgba(0,0,0,0.6)", padding: "3px 10px", borderRadius: 20, fontSize: 12 }}>
-                응시자 영상
+                {t("exam.applicantName")}
               </div>
             </div>
           </div>
@@ -128,20 +132,20 @@ export default function ExaminerPage({ params }: { params: Promise<{ sessionId: 
               background: micOn ? "rgba(255,255,255,0.07)" : "rgba(230,57,70,0.2)",
               color: micOn ? "#F0F0F5" : "#E63946", cursor: "pointer", fontSize: 14,
             }}>
-              {micOn ? "🎤 마이크 ON" : "🔇 마이크 OFF"}
+              {micOn ? `🎤 ${t("exam.micOn")}` : `🔇 ${t("exam.micOff")}`}
             </button>
             <button onClick={handleCamToggle} style={{
               padding: "10px 20px", borderRadius: 8, border: "1px solid rgba(255,255,255,0.12)",
               background: camOn ? "rgba(255,255,255,0.07)" : "rgba(230,57,70,0.2)",
               color: camOn ? "#F0F0F5" : "#E63946", cursor: "pointer", fontSize: 14,
             }}>
-              {camOn ? "📷 카메라 ON" : "📷 카메라 OFF"}
+              {camOn ? `📷 ${t("exam.cameraOn")}` : `📷 ${t("exam.cameraOff")}`}
             </button>
             <button onClick={stop} style={{
               padding: "10px 20px", borderRadius: 8, border: "1px solid rgba(230,57,70,0.4)",
               background: "rgba(230,57,70,0.15)", color: "#E63946", cursor: "pointer", fontSize: 14,
             }}>
-              심사 종료
+              {t("exam.endExam")}
             </button>
           </div>
         </div>
