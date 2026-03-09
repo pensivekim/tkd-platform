@@ -6,3 +6,7 @@ compatibility_date = "2024-12-01"
 binding = "DB"
 database_name = "tkd-platform"
 database_id = "68001093-98a2-4646-906c-7d9d21fae554"
+
+[[r2_buckets]]
+binding = "MEDIA"
+bucket_name = "tkd-media"

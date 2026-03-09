@@ -59,3 +59,50 @@ CREATE TABLE IF NOT EXISTS training_signals (
   data TEXT NOT NULL,
   created_at TEXT DEFAULT (datetime('now'))
 );
+
+CREATE TABLE IF NOT EXISTS events (
+  id TEXT PRIMARY KEY,
+  title TEXT NOT NULL,
+  date TEXT,
+  location TEXT,
+  status TEXT DEFAULT 'upcoming',
+  broadcast_status TEXT DEFAULT 'off',
+  viewer_count INTEGER DEFAULT 0,
+  scoreboard TEXT DEFAULT '{}',
+  created_at TEXT DEFAULT (datetime('now'))
+);
+
+CREATE TABLE IF NOT EXISTS event_players (
+  id TEXT PRIMARY KEY,
+  event_id TEXT NOT NULL,
+  name TEXT NOT NULL,
+  dojang_name TEXT,
+  dan_level INTEGER,
+  category TEXT,
+  parent_messenger_id TEXT,
+  parent_messenger_type TEXT,
+  face_encoding TEXT,
+  created_at TEXT DEFAULT (datetime('now')),
+  FOREIGN KEY (event_id) REFERENCES events(id)
+);
+
+CREATE TABLE IF NOT EXISTS event_media (
+  id TEXT PRIMARY KEY,
+  event_id TEXT NOT NULL,
+  type TEXT DEFAULT 'photo',
+  r2_key TEXT NOT NULL,
+  player_id TEXT,
+  player_name TEXT,
+  captured_at TEXT DEFAULT (datetime('now')),
+  FOREIGN KEY (event_id) REFERENCES events(id)
+);
+
+CREATE TABLE IF NOT EXISTS event_signals (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  event_id TEXT NOT NULL,
+  from_id TEXT NOT NULL,
+  to_id TEXT NOT NULL,
+  type TEXT NOT NULL,
+  data TEXT NOT NULL,
+  created_at TEXT DEFAULT (datetime('now'))
+);
