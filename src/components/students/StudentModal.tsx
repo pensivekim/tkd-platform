@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, FormEvent } from 'react'
 import { z } from 'zod'
-import { BELT_LIST } from '@/lib/constants'
+import { BELT_LIST, GRADE_TYPES } from '@/lib/constants'
 import { captureException } from '@/lib/sentry'
 import LoadingSpinner from '@/components/ui/LoadingSpinner'
 import type { Student } from '@/types/student'
@@ -10,12 +10,17 @@ import type { Student } from '@/types/student'
 const PHOTOS_URL = process.env.NEXT_PUBLIC_PHOTOS_URL ?? ''
 
 const Schema = z.object({
-  name: z.string().min(1, '이름을 입력해주세요.'),
-  birth_date: z.string().optional(),
-  phone: z.string().optional(),
-  parent_phone: z.string().optional(),
-  belt: z.enum(BELT_LIST),
-  memo: z.string().optional(),
+  name:           z.string().min(1, '이름을 입력해주세요.'),
+  birth_date:     z.string().optional(),
+  phone:          z.string().optional(),
+  parent_phone:   z.string().optional(),
+  belt:           z.enum(BELT_LIST),
+  memo:           z.string().optional(),
+  grade_type:     z.enum(['dan', 'poom', 'gup', '']).optional(),
+  dan_grade:      z.string().optional(),
+  kukkiwon_id:    z.string().optional(),
+  cert_number:    z.string().optional(),
+  cert_issued_at: z.string().optional(),
 })
 
 type FormData = {
@@ -25,6 +30,11 @@ type FormData = {
   parent_phone: string
   belt: string
   memo: string
+  grade_type: '' | 'dan' | 'poom' | 'gup'
+  dan_grade: string
+  kukkiwon_id: string
+  cert_number: string
+  cert_issued_at: string
 }
 
 const EMPTY_FORM: FormData = {
@@ -34,6 +44,11 @@ const EMPTY_FORM: FormData = {
   parent_phone: '',
   belt: '흰띠',
   memo: '',
+  grade_type: '',
+  dan_grade: '',
+  kukkiwon_id: '',
+  cert_number: '',
+  cert_issued_at: '',
 }
 
 interface StudentModalProps {
@@ -55,12 +70,17 @@ export default function StudentModal({ student, onClose, onSuccess }: StudentMod
   useEffect(() => {
     if (student) {
       setForm({
-        name: student.name,
-        birth_date: student.birth_date ?? '',
-        phone: student.phone ?? '',
-        parent_phone: student.parent_phone ?? '',
-        belt: student.belt,
-        memo: student.memo ?? '',
+        name:           student.name,
+        birth_date:     student.birth_date ?? '',
+        phone:          student.phone ?? '',
+        parent_phone:   student.parent_phone ?? '',
+        belt:           student.belt,
+        memo:           student.memo ?? '',
+        grade_type:     student.grade_type ?? '',
+        dan_grade:      student.dan_grade != null ? String(student.dan_grade) : '',
+        kukkiwon_id:    student.kukkiwon_id ?? '',
+        cert_number:    student.cert_number ?? '',
+        cert_issued_at: student.cert_issued_at ?? '',
       })
       setFacePreview(student.face_r2_key && PHOTOS_URL ? `${PHOTOS_URL}/${student.face_r2_key}` : null)
     } else {
@@ -103,10 +123,18 @@ export default function StudentModal({ student, onClose, onSuccess }: StudentMod
     try {
       const url    = isEdit ? `/api/students/${student!.id}` : '/api/students'
       const method = isEdit ? 'PATCH' : 'POST'
+      const payload = {
+        ...parsed.data,
+        grade_type:  parsed.data.grade_type || null,
+        dan_grade:   parsed.data.dan_grade ? parseInt(parsed.data.dan_grade, 10) : null,
+        kukkiwon_id: parsed.data.kukkiwon_id || null,
+        cert_number: parsed.data.cert_number || null,
+        cert_issued_at: parsed.data.cert_issued_at || null,
+      }
       const res    = await fetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(parsed.data),
+        body: JSON.stringify(payload),
       })
       const data = await res.json()
       if (!res.ok) {
@@ -249,6 +277,105 @@ export default function StudentModal({ student, onClose, onSuccess }: StudentMod
               disabled={isSubmitting}
               className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent disabled:bg-gray-50 resize-none"
             />
+          </div>
+
+          {/* 단/품/급 정보 */}
+          <div className="border-t border-gray-100 pt-4">
+            <p className="text-sm font-semibold text-gray-700 mb-3">🥋 단/품/급 정보</p>
+
+            {/* 구분 선택 */}
+            <div className="grid grid-cols-2 gap-3 mb-3">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">구분</label>
+                <select
+                  value={form.grade_type}
+                  onChange={set('grade_type')}
+                  disabled={isSubmitting}
+                  className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent disabled:bg-gray-50 bg-white"
+                >
+                  <option value="">없음</option>
+                  {GRADE_TYPES.map((g) => (
+                    <option key={g.value} value={g.value}>{g.label} ({g.labelEn})</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* 숫자 */}
+              {form.grade_type && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">숫자</label>
+                  <select
+                    value={form.dan_grade}
+                    onChange={set('dan_grade')}
+                    disabled={isSubmitting}
+                    className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent disabled:bg-gray-50 bg-white"
+                  >
+                    <option value="">선택</option>
+                    {Array.from(
+                      { length: (GRADE_TYPES.find((g) => g.value === form.grade_type)?.max ?? 9) },
+                      (_, i) => i + 1
+                    ).map((n) => (
+                      <option key={n} value={n}>{n}{form.grade_type === 'gup' ? '급' : form.grade_type === 'poom' ? '품' : '단'}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
+            </div>
+
+            {/* 품(Poom) 안내 */}
+            {form.grade_type === 'poom' && (
+              <p className="text-xs text-purple-600 bg-purple-50 px-3 py-2 rounded-lg mb-3">
+                만 15세 미만 검은띠 (만 15세 이후 단 전환 가능)
+              </p>
+            )}
+
+            {form.grade_type && (
+              <>
+                {/* 국기원 등록번호 */}
+                <div className="mb-3">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    국기원 등록번호
+                    <span className="text-gray-400 font-normal ml-1">(선택)</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={form.kukkiwon_id}
+                    onChange={set('kukkiwon_id')}
+                    placeholder="국기원 공식 연동 준비 중"
+                    disabled={isSubmitting}
+                    className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent disabled:bg-gray-50"
+                  />
+                </div>
+
+                {/* 단증 번호 */}
+                <div className="mb-3">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    단증 번호
+                    <span className="text-gray-400 font-normal ml-1">(비우면 자동 생성)</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={form.cert_number}
+                    onChange={set('cert_number')}
+                    placeholder="TKP-2026-XXXX-0001"
+                    disabled={isSubmitting}
+                    className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent disabled:bg-gray-50 font-mono"
+                  />
+                </div>
+
+                {/* 취득일 */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">취득일</label>
+                  <input
+                    type="date"
+                    value={form.cert_issued_at}
+                    onChange={set('cert_issued_at')}
+                    disabled={isSubmitting}
+                    className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent disabled:bg-gray-50"
+                  />
+                </div>
+              </>
+            )}
           </div>
 
           {/* 대표 얼굴 사진 */}

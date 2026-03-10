@@ -3,15 +3,20 @@ import { z } from 'zod'
 import { nanoid } from 'nanoid'
 import { authFromRequest } from '@/lib/auth'
 import { captureException } from '@/lib/sentry'
-import { BELT_LIST } from '@/lib/constants'
+import { BELT_LIST, generateCertNumber } from '@/lib/constants'
 
 const CreateStudentSchema = z.object({
-  name: z.string().min(1, '이름을 입력해주세요.').max(50),
-  birth_date: z.string().nullable().optional(),
-  phone: z.string().nullable().optional(),
-  parent_phone: z.string().nullable().optional(),
-  belt: z.enum(BELT_LIST).default('흰띠'),
-  memo: z.string().nullable().optional(),
+  name:           z.string().min(1, '이름을 입력해주세요.').max(50),
+  birth_date:     z.string().nullable().optional(),
+  phone:          z.string().nullable().optional(),
+  parent_phone:   z.string().nullable().optional(),
+  belt:           z.enum(BELT_LIST).default('흰띠'),
+  memo:           z.string().nullable().optional(),
+  grade_type:     z.enum(['dan', 'poom', 'gup']).nullable().optional(),
+  dan_grade:      z.number().int().min(1).max(9).nullable().optional(),
+  kukkiwon_id:    z.string().max(50).nullable().optional(),
+  cert_number:    z.string().max(30).nullable().optional(),
+  cert_issued_at: z.string().nullable().optional(),
 })
 
 // GET /api/students — 원생 목록
@@ -73,16 +78,25 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    const { name, birth_date, phone, parent_phone, belt, memo } = parsed.data
+    const { name, birth_date, phone, parent_phone, belt, memo, grade_type, dan_grade, kukkiwon_id, cert_issued_at } = parsed.data
     const id = nanoid()
     const now = new Date().toISOString()
 
+    // 단증 번호 자동 생성 (grade_type 있고 cert_number 미입력 시)
+    let certNum = parsed.data.cert_number ?? null
+    if (grade_type && !certNum) {
+      const countRow = await db.prepare('SELECT COUNT(*) as cnt FROM students WHERE dojang_id = ? AND cert_number IS NOT NULL').bind(payload.dojanId).first() as { cnt: number } | null
+      certNum = generateCertNumber(payload.dojanId, (countRow?.cnt ?? 0) + 1)
+    }
+
     await db
       .prepare(
-        `INSERT INTO students (id, dojang_id, name, birth_date, phone, parent_phone, belt, status, memo, joined_at, created_at, updated_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?, 'active', ?, ?, ?, ?)`,
+        `INSERT INTO students (id, dojang_id, name, birth_date, phone, parent_phone, belt, status, memo, joined_at, created_at, updated_at,
+           grade_type, dan_grade, kukkiwon_id, cert_number, cert_issued_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, 'active', ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       )
-      .bind(id, payload.dojanId, name, birth_date ?? null, phone ?? null, parent_phone ?? null, belt, memo ?? null, now, now, now)
+      .bind(id, payload.dojanId, name, birth_date ?? null, phone ?? null, parent_phone ?? null, belt, memo ?? null, now, now, now,
+        grade_type ?? null, dan_grade ?? null, kukkiwon_id ?? null, certNum, cert_issued_at ?? null)
       .run()
 
     const student = await db.prepare('SELECT * FROM students WHERE id = ?').bind(id).first()
