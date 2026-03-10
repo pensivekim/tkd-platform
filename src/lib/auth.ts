@@ -1,4 +1,5 @@
 import { jwtVerify } from 'jose'
+import { cookies } from 'next/headers'
 
 export interface JwtPayload {
   userId: string
@@ -17,4 +18,12 @@ export async function verifyJwt(token: string): Promise<JwtPayload | null> {
   } catch {
     return null
   }
+}
+
+/** Route Handler에서 호출 — genomic_session 쿠키 자동 추출 + 검증 */
+export async function authFromRequest(): Promise<JwtPayload | null> {
+  const cookieStore = await cookies()
+  const token = cookieStore.get('genomic_session')?.value
+  if (!token) return null
+  return verifyJwt(token)
 }
