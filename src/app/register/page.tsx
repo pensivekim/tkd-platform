@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import { z } from 'zod'
 import { captureException } from '@/lib/sentry'
 import { REGION_LIST } from '@/lib/constants'
+import { useI18n } from '@/lib/i18n'
 
 const Schema = z.object({
   dojang_name:      z.string().min(1, '도장명을 입력해주세요.').max(50),
@@ -34,6 +35,7 @@ const inputCls = 'w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm f
 
 export default function RegisterPage() {
   const router = useRouter()
+  const { t } = useI18n()
   const [form, setForm]           = useState<FormData>(EMPTY)
   const [errors, setErrors]       = useState<Partial<Record<keyof FormData, string>>>({})
   const [serverError, setServerError] = useState('')
@@ -96,9 +98,9 @@ export default function RegisterPage() {
         {/* 로고 */}
         <div className="text-center mb-8">
           <span className="text-4xl">🥋</span>
-          <h1 className="mt-2 text-2xl font-bold text-gray-900">도장관 시작하기</h1>
+          <h1 className="mt-2 text-2xl font-bold text-gray-900">{t('auth.registerTitle')}</h1>
           <p className="mt-1 text-sm text-gray-500" style={{ wordBreak: 'keep-all' }}>
-            원생 30명까지 영구 무료
+            {t('auth.registerSubtitle')}
           </p>
         </div>
 
@@ -108,7 +110,7 @@ export default function RegisterPage() {
           {/* 도장명 */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              도장명 <span className="text-red-500">*</span>
+              {t('auth.dojangName')} <span className="text-red-500">*</span>
             </label>
             <input
               type="text"
@@ -125,7 +127,7 @@ export default function RegisterPage() {
           {/* 관장명 */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              관장명 <span className="text-red-500">*</span>
+              {t('auth.ownerName')} <span className="text-red-500">*</span>
             </label>
             <input
               type="text"
@@ -142,7 +144,7 @@ export default function RegisterPage() {
           {/* 이메일 */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              이메일 <span className="text-red-500">*</span>
+              {t('auth.email')} <span className="text-red-500">*</span>
             </label>
             <input
               type="email"
@@ -159,7 +161,7 @@ export default function RegisterPage() {
           {/* 비밀번호 */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              비밀번호 <span className="text-red-500">*</span>
+              {t('auth.password')} <span className="text-red-500">*</span>
             </label>
             <input
               type="password"
@@ -176,7 +178,7 @@ export default function RegisterPage() {
           {/* 비밀번호 확인 */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              비밀번호 확인 <span className="text-red-500">*</span>
+              {t('auth.confirmPassword')} <span className="text-red-500">*</span>
             </label>
             <input
               type="password"
@@ -192,7 +194,7 @@ export default function RegisterPage() {
 
           {/* 전화번호 */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">전화번호</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">{t('auth.phone')}</label>
             <input
               type="tel"
               value={form.phone}
@@ -206,14 +208,14 @@ export default function RegisterPage() {
 
           {/* 지역 */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">지역</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">{t('auth.region')}</label>
             <select
               value={form.region}
               onChange={setField('region')}
               disabled={isLoading}
               className={inputCls}
             >
-              <option value="">선택하세요</option>
+              <option value="">{t('auth.selectRegion')}</option>
               {REGION_LIST.map((r) => (
                 <option key={r} value={r}>{r}</option>
               ))}
@@ -235,19 +237,19 @@ export default function RegisterPage() {
             {isLoading ? (
               <>
                 <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                가입 중...
+                {t('auth.registering')}
               </>
             ) : (
-              '무료로 시작하기'
+              t('auth.register')
             )}
           </button>
         </form>
 
         {/* 로그인 링크 */}
         <p className="mt-5 text-center text-sm text-gray-500">
-          이미 계정이 있으신가요?{' '}
+          {t('auth.alreadyHaveAccount')}{' '}
           <Link href="/login" className="text-red-600 font-semibold hover:underline">
-            로그인
+            {t('auth.login')}
           </Link>
         </p>
 

@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { captureException } from '@/lib/sentry'
 import { ATTENDANCE_TYPES } from '@/lib/constants'
+import { useI18n } from '@/lib/i18n'
 import LoadingSpinner from '@/components/ui/LoadingSpinner'
 import EmptyState from '@/components/ui/EmptyState'
 import ErrorMessage from '@/components/ui/ErrorMessage'
@@ -22,6 +23,7 @@ const TYPE_STYLE: Record<AType, { active: string; inactive: string; label: strin
 const toDateStr = (d: Date) => d.toISOString().slice(0, 10)
 
 export default function AttendancePage() {
+  const { t } = useI18n()
   const [date, setDate] = useState<string>(toDateStr(new Date()))
   const [students, setStudents] = useState<Student[]>([])
   const [attendanceMap, setAttendanceMap] = useState<Map<string, Attendance>>(new Map())
@@ -151,7 +153,7 @@ export default function AttendancePage() {
   return (
     <div>
       {/* 헤더 */}
-      <h1 className="text-xl font-bold text-gray-900 mb-5">출석 관리</h1>
+      <h1 className="text-xl font-bold text-gray-900 mb-5">{t('dash.nav.attendance')}</h1>
 
       {/* 날짜 선택 */}
       <div className="flex items-center justify-between bg-white rounded-2xl border border-gray-100 shadow-sm px-4 py-3 mb-4">

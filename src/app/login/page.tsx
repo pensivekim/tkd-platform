@@ -3,9 +3,11 @@
 import { useState, FormEvent } from 'react'
 import { useRouter } from 'next/navigation'
 import { captureException } from '@/lib/sentry'
+import { useI18n } from '@/lib/i18n'
 
 export default function LoginPage() {
   const router = useRouter()
+  const { t } = useI18n()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
@@ -45,9 +47,9 @@ export default function LoginPage() {
         {/* 로고 */}
         <div className="text-center mb-8">
           <span className="text-4xl">🥋</span>
-          <h1 className="mt-2 text-2xl font-bold text-gray-900">도장관</h1>
+          <h1 className="mt-2 text-2xl font-bold text-gray-900">{t('auth.loginTitle')}</h1>
           <p className="mt-1 text-sm text-gray-500" style={{ wordBreak: 'keep-all' }}>
-            태권도 도장 관리 플랫폼
+            {t('auth.loginSubtitle')}
           </p>
         </div>
 
@@ -55,7 +57,7 @@ export default function LoginPage() {
         <form onSubmit={handleSubmit} className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 space-y-4">
           <div>
             <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-              이메일
+              {t('auth.email')}
             </label>
             <input
               id="email"
@@ -72,7 +74,7 @@ export default function LoginPage() {
 
           <div>
             <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
-              비밀번호
+              {t('auth.password')}
             </label>
             <input
               id="password"
@@ -82,7 +84,7 @@ export default function LoginPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               disabled={isLoading}
-              placeholder="비밀번호 입력"
+              placeholder={t('auth.password')}
               className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent disabled:bg-gray-50 disabled:text-gray-400"
             />
           </div>
@@ -102,10 +104,10 @@ export default function LoginPage() {
             {isLoading ? (
               <>
                 <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                로그인 중...
+                {t('auth.loggingIn')}
               </>
             ) : (
-              '로그인'
+              t('auth.login')
             )}
           </button>
         </form>

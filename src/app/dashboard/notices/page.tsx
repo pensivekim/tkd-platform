@@ -3,12 +3,14 @@
 import { useState, useEffect, useCallback } from 'react'
 import { captureException } from '@/lib/sentry'
 import LoadingSpinner from '@/components/ui/LoadingSpinner'
+import { useI18n } from '@/lib/i18n'
 import EmptyState from '@/components/ui/EmptyState'
 import ErrorMessage from '@/components/ui/ErrorMessage'
 import NoticeModal from '@/components/notices/NoticeModal'
 import type { Notice } from '@/types/notice'
 
 export default function NoticesPage() {
+  const { t } = useI18n()
   const [notices, setNotices]             = useState<Notice[]>([])
   const [isLoading, setIsLoading]         = useState(true)
   const [error, setError]                 = useState<string | null>(null)
@@ -57,12 +59,12 @@ export default function NoticesPage() {
     <div>
       {/* 헤더 */}
       <div className="flex items-center justify-between mb-5">
-        <h1 className="text-xl font-bold text-gray-900">공지사항</h1>
+        <h1 className="text-xl font-bold text-gray-900">{t('dash.nav.notices')}</h1>
         <button
           onClick={openCreate}
           className="flex items-center gap-1.5 px-4 py-2 bg-red-600 text-white text-sm font-semibold rounded-lg hover:bg-red-700 transition-colors"
         >
-          <span>+</span> 공지 등록
+          <span>+</span> {t('dash.addNotice')}
         </button>
       </div>
 
@@ -105,14 +107,14 @@ export default function NoticesPage() {
                     onClick={() => openEdit(notice)}
                     className="text-xs px-3 py-1.5 border border-gray-200 rounded-lg text-gray-600 hover:bg-gray-100 transition-colors"
                   >
-                    수정
+                    {t('dash.edit')}
                   </button>
                   <button
                     onClick={() => handleDelete(notice.id)}
                     disabled={deletingId === notice.id}
                     className="text-xs px-3 py-1.5 border border-red-200 rounded-lg text-red-500 hover:bg-red-50 transition-colors disabled:opacity-50"
                   >
-                    {deletingId === notice.id ? '삭제 중...' : '삭제'}
+                    {t('dash.delete')}
                   </button>
                 </div>
               </div>

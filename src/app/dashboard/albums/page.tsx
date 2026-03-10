@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { captureException } from '@/lib/sentry'
+import { useI18n } from '@/lib/i18n'
 import LoadingSpinner from '@/components/ui/LoadingSpinner'
 import EmptyState from '@/components/ui/EmptyState'
 import ErrorMessage from '@/components/ui/ErrorMessage'
@@ -11,20 +12,21 @@ import type { Album } from '@/types/album'
 
 type Filter = 'all' | 'training' | 'competition'
 
-const TYPE_LABEL: Record<string, string> = { training: '훈련', competition: '대회' }
+const TYPE_LABEL_KEYS: Record<string, string> = { training: 'album.training', competition: 'album.competition' }
 const TYPE_COLOR: Record<string, string> = {
   training:    'bg-blue-100 text-blue-700',
   competition: 'bg-orange-100 text-orange-700',
 }
 
-const FILTER_TABS: { id: Filter; label: string }[] = [
-  { id: 'all',         label: '전체' },
-  { id: 'training',    label: '훈련' },
-  { id: 'competition', label: '대회' },
+const FILTER_TAB_DEFS: { id: Filter; tKey: string }[] = [
+  { id: 'all',         tKey: 'album.all' },
+  { id: 'training',    tKey: 'album.training' },
+  { id: 'competition', tKey: 'album.competition' },
 ]
 
 export default function AlbumsPage() {
   const router = useRouter()
+  const { t } = useI18n()
   const [albums, setAlbums]         = useState<Album[]>([])
   const [filter, setFilter]         = useState<Filter>('all')
   const [isLoading, setIsLoading]   = useState(true)
@@ -88,7 +90,7 @@ export default function AlbumsPage() {
   return (
     <div>
       <div className="flex items-center justify-between mb-5">
-        <h1 className="text-xl font-bold text-gray-900">앨범 관리</h1>
+        <h1 className="text-xl font-bold text-gray-900">{t('dash.nav.albums')}</h1>
         <button
           onClick={() => setShowModal(true)}
           className="flex items-center gap-1.5 px-4 py-2.5 bg-red-600 text-white text-sm font-semibold rounded-lg hover:bg-red-700 transition-colors"
@@ -96,13 +98,13 @@ export default function AlbumsPage() {
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
           </svg>
-          앨범 만들기
+          {t('album.createAlbum')}
         </button>
       </div>
 
       {/* 필터 탭 */}
       <div className="flex gap-2 mb-5">
-        {FILTER_TABS.map((tab) => (
+        {FILTER_TAB_DEFS.map((tab) => (
           <button
             key={tab.id}
             onClick={() => setFilter(tab.id)}
@@ -112,7 +114,7 @@ export default function AlbumsPage() {
                 : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
             }`}
           >
-            {tab.label}
+            {t(tab.tKey)}
           </button>
         ))}
       </div>
@@ -125,9 +127,9 @@ export default function AlbumsPage() {
       ) : filtered.length === 0 ? (
         <EmptyState
           icon="📸"
-          title={filter === 'all' ? '첫 앨범을 만들어보세요' : `${TYPE_LABEL[filter]} 앨범이 없습니다`}
+          title={filter === 'all' ? t('album.noAlbums') : `${t(TYPE_LABEL_KEYS[filter])} ${t('album.noAlbums')}`}
           description="훈련이나 대회 사진을 모아 학부모와 공유해보세요."
-          ctaLabel={filter === 'all' ? '앨범 만들기' : undefined}
+          ctaLabel={filter === 'all' ? t('album.createAlbum') : undefined}
           ctaHref={undefined}
         />
       ) : (
@@ -155,7 +157,7 @@ export default function AlbumsPage() {
 
                   {/* 유형 배지 */}
                   <span className={`absolute top-2 left-2 px-2 py-0.5 rounded-full text-xs font-semibold ${TYPE_COLOR[album.type] ?? 'bg-gray-100 text-gray-600'}`}>
-                    {TYPE_LABEL[album.type] ?? album.type}
+                    {t(TYPE_LABEL_KEYS[album.type] ?? 'album.training')}
                   </span>
 
                   {/* 우측 상단 액션 버튼 */}
@@ -188,7 +190,7 @@ export default function AlbumsPage() {
                   <p className="font-semibold text-gray-900 text-sm truncate" style={{ wordBreak: 'keep-all' }}>{album.title}</p>
                   <div className="flex items-center justify-between mt-1">
                     <span className="text-xs text-gray-400">{album.event_date}</span>
-                    <span className="text-xs text-gray-500">사진 {album.photo_count}장</span>
+                    <span className="text-xs text-gray-500">{t('album.photos')} {album.photo_count}</span>
                   </div>
                 </div>
               </div>

@@ -2,17 +2,20 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { useI18n, LANG_FLAGS, type Lang } from '@/lib/i18n'
 
-const NAV_ITEMS = [
-  { href: '/dashboard', label: '대시보드', icon: '🏠' },
-  { href: '/dashboard/students', label: '원생 관리', icon: '👥' },
-  { href: '/dashboard/attendance', label: '출석 관리', icon: '✅' },
-  { href: '/dashboard/albums',    label: '앨범 관리',   icon: '📸' },
-  { href: '/dashboard/coaching',  label: '라이브 코칭', icon: '🎯' },
-  { href: '/dashboard/poomsae',   label: '품새 기록',   icon: '🥋' },
-  { href: '/dashboard/notices', label: '공지사항', icon: '📢' },
-  { href: '/dashboard/settings', label: '설정', icon: '⚙️' },
+const NAV_KEYS: { href: string; key: string; icon: string }[] = [
+  { href: '/dashboard',            key: 'dash.nav.overview',     icon: '🏠' },
+  { href: '/dashboard/students',   key: 'dash.nav.students',     icon: '👥' },
+  { href: '/dashboard/attendance', key: 'dash.nav.attendance',   icon: '✅' },
+  { href: '/dashboard/albums',     key: 'dash.nav.albums',       icon: '📸' },
+  { href: '/dashboard/coaching',   key: 'dash.nav.coaching',     icon: '🎯' },
+  { href: '/dashboard/poomsae',    key: 'dash.nav.poomsaeAdmin', icon: '🥋' },
+  { href: '/dashboard/notices',    key: 'dash.nav.notices',      icon: '📢' },
+  { href: '/dashboard/settings',   key: 'dash.nav.settings',     icon: '⚙️' },
 ]
+
+const LANGS: Lang[] = ['ko', 'en', 'th', 'es']
 
 interface SidebarProps {
   isOpen: boolean
@@ -21,19 +24,20 @@ interface SidebarProps {
 
 export default function Sidebar({ isOpen, onClose }: SidebarProps) {
   const pathname = usePathname()
+  const { t, lang, setLang } = useI18n()
 
   const isActive = (href: string) =>
     href === '/dashboard' ? pathname === '/dashboard' : pathname.startsWith(href)
 
   const sidebarContent = (
-    <nav className="flex flex-col gap-1 p-4">
+    <nav className="flex flex-col gap-1 p-4 h-full">
       {/* 로고 영역 */}
       <div className="flex items-center gap-2 px-3 py-3 mb-4">
         <span className="text-xl">🥋</span>
         <span className="font-bold text-red-600 text-lg">도장관</span>
       </div>
 
-      {NAV_ITEMS.map((item) => (
+      {NAV_KEYS.map((item) => (
         <Link
           key={item.href}
           href={item.href}
@@ -45,9 +49,29 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
           }`}
         >
           <span className="text-base" aria-hidden="true">{item.icon}</span>
-          {item.label}
+          {t(item.key)}
         </Link>
       ))}
+
+      {/* 언어 전환 */}
+      <div className="mt-auto pt-4 border-t border-gray-100">
+        <div className="flex gap-1 px-2 flex-wrap">
+          {LANGS.map((l) => (
+            <button
+              key={l}
+              onClick={() => setLang(l)}
+              title={t(`common.lang${l.charAt(0).toUpperCase()}${l.slice(1)}`)}
+              className={`px-2 py-1 rounded text-sm transition-colors ${
+                lang === l
+                  ? 'bg-red-100 text-red-600 font-medium'
+                  : 'text-gray-400 hover:text-gray-700 hover:bg-gray-100'
+              }`}
+            >
+              {LANG_FLAGS[l]}
+            </button>
+          ))}
+        </div>
+      </div>
     </nav>
   )
 

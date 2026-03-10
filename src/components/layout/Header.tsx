@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import { useI18n } from '@/lib/i18n'
 
 interface HeaderProps {
   isLoggedIn: boolean
@@ -10,6 +11,7 @@ interface HeaderProps {
 
 export default function Header({ isLoggedIn, dojanName }: HeaderProps) {
   const [menuOpen, setMenuOpen] = useState(false)
+  const { t } = useI18n()
 
   return (
     <header className="bg-white border-b border-gray-200 sticky top-0 z-50">
@@ -28,7 +30,7 @@ export default function Header({ isLoggedIn, dojanName }: HeaderProps) {
                 <span className="text-sm text-gray-600 font-medium">{dojanName}</span>
               )}
               <button className="text-sm text-gray-500 hover:text-red-600 transition-colors">
-                로그아웃
+                {t('auth.logout')}
               </button>
             </>
           ) : (
@@ -36,7 +38,7 @@ export default function Header({ isLoggedIn, dojanName }: HeaderProps) {
               href="/login"
               className="text-sm px-4 py-1.5 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium"
             >
-              로그인
+              {t('auth.login')}
             </Link>
           )}
         </div>
@@ -69,7 +71,7 @@ export default function Header({ isLoggedIn, dojanName }: HeaderProps) {
                 className="text-sm text-left text-gray-500 hover:text-red-600 transition-colors"
                 onClick={() => setMenuOpen(false)}
               >
-                로그아웃
+                {t('auth.logout')}
               </button>
             </>
           ) : (
@@ -78,7 +80,7 @@ export default function Header({ isLoggedIn, dojanName }: HeaderProps) {
               className="text-sm text-red-600 font-medium"
               onClick={() => setMenuOpen(false)}
             >
-              로그인
+              {t('auth.login')}
             </Link>
           )}
         </div>

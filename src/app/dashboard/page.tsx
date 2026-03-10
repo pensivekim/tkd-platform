@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { captureException } from '@/lib/sentry'
 import LoadingSpinner from '@/components/ui/LoadingSpinner'
 import ErrorMessage from '@/components/ui/ErrorMessage'
+import { useI18n } from '@/lib/i18n'
 
 interface Stats {
   totalStudents:      number
@@ -13,13 +14,14 @@ interface Stats {
 }
 
 const CARD_META = [
-  { key: 'totalStudents'      as const, label: '전체 원생 수',     unit: '명', icon: '👥', color: 'bg-blue-50 text-blue-600'    },
-  { key: 'todayAttendance'    as const, label: '오늘 출석',         unit: '명', icon: '✅', color: 'bg-green-50 text-green-600'  },
-  { key: 'monthlyNewStudents' as const, label: '이번 달 신규 원생', unit: '명', icon: '🆕', color: 'bg-yellow-50 text-yellow-600' },
-  { key: 'totalNotices'       as const, label: '공지사항 수',       unit: '건', icon: '📢', color: 'bg-red-50 text-red-600'      },
+  { key: 'totalStudents'      as const, tKey: 'dash.totalStudents',    unit: '명', icon: '👥', color: 'bg-blue-50 text-blue-600'    },
+  { key: 'todayAttendance'    as const, tKey: 'dash.todayAttendance',  unit: '명', icon: '✅', color: 'bg-green-50 text-green-600'  },
+  { key: 'monthlyNewStudents' as const, tKey: 'dash.students',         unit: '명', icon: '🆕', color: 'bg-yellow-50 text-yellow-600' },
+  { key: 'totalNotices'       as const, tKey: 'dash.notices',          unit: '건', icon: '📢', color: 'bg-red-50 text-red-600'      },
 ]
 
 export default function DashboardPage() {
+  const { t } = useI18n()
   const [stats, setStats]         = useState<Stats | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError]         = useState<string | null>(null)
@@ -45,9 +47,9 @@ export default function DashboardPage() {
   return (
     <div>
       <div className="mb-6">
-        <h1 className="text-xl font-bold text-gray-900">대시보드</h1>
+        <h1 className="text-xl font-bold text-gray-900">{t('dash.nav.overview')}</h1>
         <p className="text-sm text-gray-500 mt-1" style={{ wordBreak: 'keep-all' }}>
-          도장 현황을 한눈에 확인하세요.
+          {t('dash.overview')}
         </p>
       </div>
 
@@ -64,7 +66,7 @@ export default function DashboardPage() {
                 {card.icon}
               </div>
               <p className="text-sm text-gray-500 mb-1" style={{ wordBreak: 'keep-all' }}>
-                {card.label}
+                {t(card.tKey)}
               </p>
               <div className="flex items-baseline gap-1 min-h-[2rem]">
                 {isLoading ? (

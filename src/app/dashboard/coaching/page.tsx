@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { captureException } from '@/lib/sentry'
+import { useI18n } from '@/lib/i18n'
 import LoadingSpinner from '@/components/ui/LoadingSpinner'
 import EmptyState from '@/components/ui/EmptyState'
 import ErrorMessage from '@/components/ui/ErrorMessage'
@@ -11,22 +12,23 @@ import type { CoachingSession } from '@/types/coaching'
 
 type StatusFilter = 'all' | 'waiting' | 'active' | 'ended'
 
-const STATUS_LABEL: Record<string, string>  = { waiting: '대기중', active: '진행중', ended: '종료' }
+const STATUS_LABEL_KEYS: Record<string, string> = { waiting: 'coaching.pending', active: 'coaching.active', ended: 'coaching.completed' }
 const STATUS_COLOR: Record<string, string>  = {
   waiting: 'bg-yellow-100 text-yellow-700',
   active:  'bg-green-100  text-green-700',
   ended:   'bg-gray-100   text-gray-500',
 }
-const TYPE_LABEL:   Record<string, string>  = { individual: '1:1 개인', group: '그룹' }
-const FILTER_TABS: { id: StatusFilter; label: string }[] = [
-  { id: 'all',     label: '전체' },
-  { id: 'waiting', label: '대기중' },
-  { id: 'active',  label: '진행중' },
-  { id: 'ended',   label: '종료' },
+const TYPE_LABEL_KEYS: Record<string, string> = { individual: 'coaching.individual', group: 'coaching.group' }
+const FILTER_TAB_DEFS: { id: StatusFilter; tKey: string }[] = [
+  { id: 'all',     tKey: 'coaching.all' },
+  { id: 'waiting', tKey: 'coaching.pending' },
+  { id: 'active',  tKey: 'coaching.active' },
+  { id: 'ended',   tKey: 'coaching.completed' },
 ]
 
 export default function CoachingPage() {
   const router = useRouter()
+  const { t } = useI18n()
   const [sessions,    setSessions]    = useState<CoachingSession[]>([])
   const [filter,      setFilter]      = useState<StatusFilter>('all')
   const [isLoading,   setIsLoading]   = useState(true)
@@ -107,7 +109,7 @@ export default function CoachingPage() {
   return (
     <div>
       <div className="flex items-center justify-between mb-5">
-        <h1 className="text-xl font-bold text-gray-900">라이브 코칭</h1>
+        <h1 className="text-xl font-bold text-gray-900">{t('dash.nav.coaching')}</h1>
         <button
           onClick={() => setShowModal(true)}
           className="flex items-center gap-1.5 px-4 py-2.5 bg-red-600 text-white text-sm font-semibold rounded-lg hover:bg-red-700 transition-colors"
@@ -115,13 +117,13 @@ export default function CoachingPage() {
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
           </svg>
-          세션 만들기
+          {t('coaching.createSession')}
         </button>
       </div>
 
       {/* 필터 탭 */}
       <div className="flex gap-2 mb-5 flex-wrap">
-        {FILTER_TABS.map((tab) => (
+        {FILTER_TAB_DEFS.map((tab) => (
           <button
             key={tab.id}
             onClick={() => setFilter(tab.id)}
@@ -129,7 +131,7 @@ export default function CoachingPage() {
               filter === tab.id ? 'bg-red-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
             }`}
           >
-            {tab.label}
+            {t(tab.tKey)}
           </button>
         ))}
       </div>
@@ -141,9 +143,9 @@ export default function CoachingPage() {
       ) : filtered.length === 0 ? (
         <EmptyState
           icon="🎯"
-          title={filter === 'all' ? '첫 코칭 세션을 만들어보세요' : `${STATUS_LABEL[filter] ?? filter} 세션이 없습니다`}
+          title={filter === 'all' ? t('coaching.noSessions') : `${t(STATUS_LABEL_KEYS[filter] ?? 'coaching.noSessions')} 세션이 없습니다`}
           description="원생과 1:1 또는 그룹으로 라이브 코칭을 진행하세요."
-          ctaLabel={filter === 'all' ? '세션 만들기' : undefined}
+          ctaLabel={filter === 'all' ? t('coaching.createSession') : undefined}
         />
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -163,10 +165,10 @@ export default function CoachingPage() {
                 {/* 상단: 배지들 */}
                 <div className="flex items-center gap-2 mb-2 flex-wrap">
                   <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${STATUS_COLOR[session.status] ?? 'bg-gray-100 text-gray-500'}`}>
-                    {STATUS_LABEL[session.status] ?? session.status}
+                    {t(STATUS_LABEL_KEYS[session.status] ?? 'coaching.active')}
                   </span>
                   <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-indigo-100 text-indigo-700">
-                    {TYPE_LABEL[session.type] ?? session.type}
+                    {t(TYPE_LABEL_KEYS[session.type] ?? 'coaching.individual')}
                   </span>
                   <span className="text-xs text-gray-400 ml-auto">최대 {session.max_participants}명</span>
                 </div>
