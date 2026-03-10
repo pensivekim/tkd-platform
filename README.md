@@ -1,36 +1,60 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 도장관 (DOJANGWAN)
 
-## Getting Started
+태권도 도장 전용 SaaS 플랫폼 — 원생 관리, 출석, AI 품새 채점, 원격 승단 심사
 
-First, run the development server:
+## 개발 서버 실행
 
 ```bash
+# 로컬 개발 (D1 DB 없음 — API 비동작)
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+
+# Cloudflare D1 연동 개발 (권장)
+npx wrangler dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 빌드
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+npm run build
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 배포
 
-## Learn More
+`main` 브랜치에 push하면 GitHub Actions가 자동으로 Cloudflare Pages에 배포합니다.
 
-To learn more about Next.js, take a look at the following resources:
+### GitHub Secrets 설정
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+GitHub 저장소 → Settings → Secrets and variables → Actions → **New repository secret**
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+| Secret 이름 | 설명 | 발급 위치 |
+|---|---|---|
+| `CLOUDFLARE_API_TOKEN` | Cloudflare API 토큰 | [Cloudflare Dashboard](https://dash.cloudflare.com/profile/api-tokens) → Create Token → Edit Cloudflare Workers 템플릿 사용 |
+| `CLOUDFLARE_ACCOUNT_ID` | Cloudflare 계정 ID | Cloudflare Dashboard → 우측 사이드바 Account ID |
 
-## Deploy on Vercel
+> **주의**: API 토큰 생성 시 **Cloudflare Pages: Edit** 권한이 반드시 포함되어야 합니다.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### 환경 변수 (Cloudflare Pages)
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Cloudflare Dashboard → Pages → dojangwan → Settings → Environment variables
+
+| 변수 | 설명 |
+|---|---|
+| `JWT_SECRET` | JWT 서명 키 (최소 32자 랜덤 문자열) |
+
+### D1 데이터베이스
+
+```bash
+# D1 DB 생성 (최초 1회)
+npx wrangler d1 create dojangwan-db
+
+# 스키마 적용
+npx wrangler d1 execute dojangwan-db --file=db/schema.sql
+```
+
+## 기술 스택
+
+- **Frontend**: Next.js 15 (App Router), TypeScript, Tailwind CSS
+- **Backend**: Next.js API Routes, Zod, Jose (JWT), bcryptjs
+- **Database**: Cloudflare D1 (SQLite)
+- **배포**: Cloudflare Pages
+- **모니터링**: Sentry (선택)

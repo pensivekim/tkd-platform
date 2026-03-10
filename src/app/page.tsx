@@ -51,12 +51,20 @@ export default function LandingPage() {
       <header className="sticky top-0 z-50 bg-white/90 backdrop-blur border-b border-gray-100">
         <div className="max-w-5xl mx-auto px-4 h-14 flex items-center justify-between">
           <span className="font-bold text-lg text-red-600">🥋 도장관</span>
-          <Link
-            href="/login"
-            className="text-sm px-4 py-1.5 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium"
-          >
-            로그인
-          </Link>
+          <div className="flex items-center gap-2">
+            <Link
+              href="/register"
+              className="text-sm px-4 py-1.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium"
+            >
+              회원가입
+            </Link>
+            <Link
+              href="/login"
+              className="text-sm px-4 py-1.5 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium"
+            >
+              로그인
+            </Link>
+          </div>
         </div>
       </header>
 
@@ -79,7 +87,7 @@ export default function LandingPage() {
             원생 관리부터 AI 품새 채점까지
           </p>
           <Link
-            href="/login"
+            href="/register"
             className="inline-flex items-center gap-2 px-8 py-3.5 bg-red-600 text-white text-base font-bold rounded-xl hover:bg-red-700 transition-colors shadow-lg shadow-red-900/30"
           >
             무료로 시작하기
@@ -153,7 +161,7 @@ export default function LandingPage() {
                   ))}
                 </ul>
                 <Link
-                  href="/login"
+                  href="/register"
                   className={`w-full text-center py-2.5 rounded-lg text-sm font-semibold transition-colors ${
                     plan.highlight
                       ? 'bg-red-600 text-white hover:bg-red-700'
@@ -183,7 +191,7 @@ export default function LandingPage() {
           국내외 수천 개 도장이 도장관으로 더 스마트하게 운영하고 있습니다.
         </p>
         <Link
-          href="/login"
+          href="/register"
           className="inline-flex items-center gap-2 px-8 py-3.5 bg-red-600 text-white text-base font-bold rounded-xl hover:bg-red-700 transition-colors"
         >
           무료로 시작하기
