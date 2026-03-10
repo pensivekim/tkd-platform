@@ -9,9 +9,16 @@
     "pages:deploy": "next build && npx wrangler@4 pages deploy .next --project-name tkd-platform"
   },
   "dependencies": {
+    "@hono/zod-validator": "^0.7.6",
+    "@sentry/nextjs": "^10.42.0",
+    "date-fns": "^4.1.0",
+    "hono": "^4.12.6",
+    "jose": "^6.2.1",
+    "nanoid": "^5.1.6",
     "next": "16.1.6",
     "react": "19.2.3",
-    "react-dom": "19.2.3"
+    "react-dom": "19.2.3",
+    "zod": "^4.3.6"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
