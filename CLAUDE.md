@@ -140,3 +140,12 @@ npx wrangler d1 execute tkd-platform --local --file=db/schema.sql
 - 빈 catch 블록 금지
 - wrangler 3.x 사용 금지
 - 빈 화면 방치 금지 (로딩/빈상태/에러 UI 필수)
+
+## 2026-03-10 작업 내역
+- 서비스 기본 완성도 점검 및 수정 완료
+- /health 엔드포인트 추가
+- GitHub Actions 스모크 테스트 자동화
+- Sentry 에러 로깅 적용
+- 반응형 CSS 수정 (word-break, overflow)
+- 빈 catch 블록 수정
+- 보안 취약점 수정 (해당 프로젝트만)
