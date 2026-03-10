@@ -10,8 +10,25 @@ type Params = { params: Promise<{ id: string }> }
 
 const COACH_PEER = 'coach'
 
-// ── 참가자 영상 타일 ────────────────────────────────────────────
-function RemoteTile({ peerId, stream, displayName }: { peerId: string; stream: MediaStream | null; displayName: string }) {
+type Summary = { participant_count: number; duration_minutes: number | null }
+
+// ── 피드백 버튼 정의 ───────────────────────────────────────────
+const FEEDBACK_BUTTONS = [
+  { emoji: '👍', label: '잘했어요',    text: '👍 잘했어요!' },
+  { emoji: '💪', label: '더 힘차게',   text: '💪 더 힘차게!' },
+  { emoji: '⚠️', label: '자세 수정',   text: '⚠️ 자세를 수정해봐요' },
+  { emoji: '🔄', label: '다시 해봐요', text: '🔄 다시 해봐요' },
+] as const
+
+// ── 참가자 영상 타일 (스탬프 포함) ──────────────────────────────
+function RemoteTile({
+  peerId, stream, displayName, stamp,
+}: {
+  peerId: string
+  stream: MediaStream | null
+  displayName: string
+  stamp: string | null
+}) {
   const videoRef = useRef<HTMLVideoElement>(null)
   useEffect(() => {
     if (videoRef.current && stream) videoRef.current.srcObject = stream
@@ -31,16 +48,67 @@ function RemoteTile({ peerId, stream, displayName }: { peerId: string; stream: M
       <div className="absolute bottom-2 left-2 px-2 py-0.5 rounded-full bg-black/60 text-white text-xs">
         {displayName || peerId.slice(0, 8)}
       </div>
+      {/* 스탬프 오버레이 */}
+      {stamp && (
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+          <span className="text-6xl animate-bounce drop-shadow-lg">{stamp}</span>
+        </div>
+      )}
     </div>
   )
 }
 
+// ── 세션 요약 모달 ─────────────────────────────────────────────
+function SummaryModal({
+  summary,
+  sessionTitle,
+  onClose,
+}: {
+  summary: Summary
+  sessionTitle: string
+  onClose: () => void
+}) {
+  return (
+    <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4">
+      <div className="bg-gray-900 border border-white/10 rounded-2xl p-6 w-full max-w-sm text-white text-center">
+        <div className="text-5xl mb-3">🎯</div>
+        <h2 className="text-lg font-bold mb-1">세션 종료</h2>
+        <p className="text-sm text-gray-400 mb-5 truncate">{sessionTitle}</p>
+
+        <div className="grid grid-cols-2 gap-3 mb-6">
+          <div className="bg-gray-800 rounded-xl p-3">
+            <p className="text-2xl font-bold text-yellow-400">{summary.participant_count}</p>
+            <p className="text-xs text-gray-400 mt-0.5">참가자</p>
+          </div>
+          <div className="bg-gray-800 rounded-xl p-3">
+            <p className="text-2xl font-bold text-green-400">
+              {summary.duration_minutes != null ? `${summary.duration_minutes}분` : '-'}
+            </p>
+            <p className="text-xs text-gray-400 mt-0.5">진행 시간</p>
+          </div>
+        </div>
+
+        <button
+          onClick={onClose}
+          className="w-full py-2.5 bg-red-600 text-white font-semibold rounded-xl hover:bg-red-700 transition-colors text-sm"
+        >
+          확인
+        </button>
+      </div>
+    </div>
+  )
+}
+
+// ── 메인 페이지 ────────────────────────────────────────────────
 export default function CoachSessionPage({ params }: Params) {
   const { id: sessionId } = use(params)
   const [session,   setSession]   = useState<CoachingSession | null>(null)
   const [started,   setStarted]   = useState(false)
   const [chatInput, setChatInput] = useState('')
   const [copied,    setCopied]    = useState(false)
+  const [summary,   setSummary]   = useState<Summary | null>(null)
+  // peerId → stamp emoji (2초 후 자동 제거)
+  const [stamps, setStamps] = useState<Map<string, string>>(new Map())
   const localVideoRef = useRef<HTMLVideoElement>(null)
   const chatEndRef    = useRef<HTMLDivElement>(null)
 
@@ -89,6 +157,12 @@ export default function CoachSessionPage({ params }: Params) {
     try {
       await endSession()
       setStarted(false)
+      // 세션 요약 조회
+      const res = await fetch(`/api/coaching/${sessionId}`)
+      if (res.ok) {
+        const data = await res.json() as { summary?: Summary }
+        setSummary(data.summary ?? null)
+      }
     } catch (err) {
       captureException(err, { action: 'end_coaching_session', sessionId })
       alert('세션 종료에 실패했습니다.')
@@ -107,8 +181,18 @@ export default function CoachSessionPage({ params }: Params) {
     e.preventDefault()
     const text = chatInput.trim()
     if (!text) return
-    sendMessage(text)
+    sendMessage(text, 'chat')
     setChatInput('')
+  }
+
+  // 피드백 전송 (모든 참가자) + 스탬프 표시
+  function handleFeedback(emoji: string, text: string) {
+    sendMessage(text, 'feedback')
+    // 스탬프: 현재 연결된 모든 참가자에게 표시
+    const newStamps = new Map<string, string>()
+    participants.forEach((p) => newStamps.set(p.peer_id, emoji))
+    setStamps(newStamps)
+    setTimeout(() => setStamps(new Map()), 2000)
   }
 
   return (
@@ -139,6 +223,22 @@ export default function CoachSessionPage({ params }: Params) {
       <div className="flex flex-1 overflow-hidden">
         {/* 좌측: 참가자 영상 그리드 */}
         <div className="flex-1 p-4 overflow-y-auto">
+          {/* 피드백 버튼 바 */}
+          {started && (
+            <div className="flex gap-2 mb-3 flex-wrap">
+              {FEEDBACK_BUTTONS.map((fb) => (
+                <button
+                  key={fb.label}
+                  onClick={() => handleFeedback(fb.emoji, fb.text)}
+                  className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-gray-800 border border-white/10 text-xs text-white hover:bg-gray-700 transition-colors"
+                >
+                  <span>{fb.emoji}</span>
+                  <span>{fb.label}</span>
+                </button>
+              ))}
+            </div>
+          )}
+
           {participants.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full min-h-[200px] text-gray-600">
               <div className="text-5xl mb-4">🎯</div>
@@ -153,6 +253,7 @@ export default function CoachSessionPage({ params }: Params) {
                   peerId={p.peer_id}
                   stream={remoteStreams.get(p.peer_id) ?? null}
                   displayName={p.display_name}
+                  stamp={stamps.get(p.peer_id) ?? null}
                 />
               ))}
             </div>
@@ -206,7 +307,11 @@ export default function CoachSessionPage({ params }: Params) {
                 <div key={msg.id} className={`text-xs ${msg.from === COACH_PEER ? 'text-right' : ''}`}>
                   <span className="text-gray-500 text-[10px]">{msg.displayName}</span>
                   <div className={`inline-block px-2 py-1 rounded-lg mt-0.5 max-w-[200px] break-words text-left ${
-                    msg.from === COACH_PEER ? 'bg-red-900/60 text-white ml-auto block' : 'bg-gray-800 text-gray-200'
+                    msg.type === 'feedback'
+                      ? 'bg-yellow-900/60 text-yellow-200 ml-auto block'
+                      : msg.from === COACH_PEER
+                        ? 'bg-red-900/60 text-white ml-auto block'
+                        : 'bg-gray-800 text-gray-200'
                   }`}>
                     {msg.text}
                   </div>
@@ -289,6 +394,15 @@ export default function CoachSessionPage({ params }: Params) {
           </button>
         )}
       </div>
+
+      {/* 세션 요약 모달 */}
+      {summary && session && (
+        <SummaryModal
+          summary={summary}
+          sessionTitle={session.title}
+          onClose={() => setSummary(null)}
+        />
+      )}
     </div>
   )
 }

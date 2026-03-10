@@ -4,6 +4,50 @@ import { captureException } from '@/lib/sentry'
 
 type Params = { params: Promise<{ id: string }> }
 
+// GET /api/coaching/[id] — 세션 요약 정보
+export async function GET(_req: NextRequest, { params }: Params) {
+  try {
+    const { id } = await params
+    const payload = await authFromRequest()
+    if (!payload)         return Response.json({ error: '인증이 필요합니다.' }, { status: 401 })
+    if (!payload.dojanId) return Response.json({ error: '도장 정보가 없습니다.' }, { status: 403 })
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const db = (process as any).env?.DB as any
+    if (!db) return Response.json({ error: 'DB를 사용할 수 없습니다.' }, { status: 503 })
+
+    const session = await db
+      .prepare('SELECT * FROM coaching_sessions WHERE id = ? AND dojang_id = ?')
+      .bind(id, payload.dojanId)
+      .first()
+    if (!session) return Response.json({ error: '세션을 찾을 수 없습니다.' }, { status: 404 })
+
+    const participantCount = await db
+      .prepare('SELECT COUNT(*) as cnt FROM coaching_participants WHERE session_id = ?')
+      .bind(id)
+      .first() as { cnt: number } | null
+
+    // 세션 지속 시간 계산 (분)
+    let durationMinutes: number | null = null
+    if (session.started_at && session.ended_at) {
+      const start = new Date(session.started_at as string).getTime()
+      const end   = new Date(session.ended_at   as string).getTime()
+      durationMinutes = Math.round((end - start) / 60000)
+    }
+
+    return Response.json({
+      session,
+      summary: {
+        participant_count: participantCount?.cnt ?? 0,
+        duration_minutes:  durationMinutes,
+      },
+    })
+  } catch (error) {
+    captureException(error, { route: 'GET /api/coaching/[id]' })
+    return Response.json({ error: '세션 정보 조회에 실패했습니다.' }, { status: 500 })
+  }
+}
+
 // PATCH /api/coaching/[id] — 세션 상태 변경
 export async function PATCH(req: NextRequest, { params }: Params) {
   try {
@@ -22,9 +66,9 @@ export async function PATCH(req: NextRequest, { params }: Params) {
       .first()
     if (!session) return Response.json({ error: '세션을 찾을 수 없습니다.' }, { status: 404 })
 
-    const body = await req.json() as { status?: 'active' | 'ended' }
-    if (!body.status || !['active', 'ended'].includes(body.status)) {
-      return Response.json({ error: 'status는 active 또는 ended 이어야 합니다.' }, { status: 400 })
+    const body = await req.json() as { status?: 'active' | 'ended' | 'waiting' }
+    if (!body.status || !['active', 'ended', 'waiting'].includes(body.status)) {
+      return Response.json({ error: 'status는 active, ended, waiting 이어야 합니다.' }, { status: 400 })
     }
 
     const now = new Date().toISOString()
@@ -33,10 +77,16 @@ export async function PATCH(req: NextRequest, { params }: Params) {
         .prepare('UPDATE coaching_sessions SET status = ?, started_at = ? WHERE id = ?')
         .bind('active', now, id)
         .run()
-    } else {
+    } else if (body.status === 'ended') {
       await db
         .prepare('UPDATE coaching_sessions SET status = ?, ended_at = ? WHERE id = ?')
         .bind('ended', now, id)
+        .run()
+    } else {
+      // waiting: 다시 열기 — ended_at 초기화
+      await db
+        .prepare('UPDATE coaching_sessions SET status = ?, started_at = NULL, ended_at = NULL WHERE id = ?')
+        .bind('waiting', id)
         .run()
     }
 

@@ -135,7 +135,9 @@ function SessionScreen({
   inviteToken: string
   displayName: string
 }) {
-  const [chatInput, setChatInput] = useState('')
+  const [chatInput,      setChatInput]      = useState('')
+  const [feedbackBanner, setFeedbackBanner] = useState<string | null>(null)
+  const [stampEmoji,     setStampEmoji]     = useState<string | null>(null)
   const coachVideoRef = useRef<HTMLVideoElement>(null)
   const localVideoRef = useRef<HTMLVideoElement>(null)
   const chatEndRef    = useRef<HTMLDivElement>(null)
@@ -167,6 +169,25 @@ function SessionScreen({
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
 
+  // 피드백/스탬프 감지
+  useEffect(() => {
+    if (messages.length === 0) return
+    const last = messages[messages.length - 1]
+    if (last.from === peerId) return // 내가 보낸 메시지는 무시
+
+    if (last.type === 'feedback') {
+      setFeedbackBanner(last.text)
+      setTimeout(() => setFeedbackBanner(null), 3000)
+      // 스탬프 추출 (첫 글자가 이모지인 경우)
+      const firstChar = [...last.text][0]
+      if (firstChar && /\p{Emoji}/u.test(firstChar)) {
+        setStampEmoji(firstChar)
+        setTimeout(() => setStampEmoji(null), 2000)
+      }
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [messages])
+
   function handleSend(e: FormEvent) {
     e.preventDefault()
     const text = chatInput.trim()
@@ -191,6 +212,13 @@ function SessionScreen({
         </span>
       </div>
 
+      {/* 피드백 배너 */}
+      {feedbackBanner && (
+        <div className="mx-3 mt-3 px-4 py-2.5 bg-yellow-500/20 border border-yellow-400/30 rounded-xl text-yellow-300 text-sm font-medium text-center">
+          {feedbackBanner}
+        </div>
+      )}
+
       {/* 메인: 코치 영상 (위) + 채팅 (옆) */}
       <div className="flex flex-1 overflow-hidden">
         {/* 좌측: 영상 영역 */}
@@ -207,6 +235,13 @@ function SessionScreen({
               </div>
             )}
             <div className="absolute top-2 left-2 px-2 py-0.5 bg-black/60 rounded-full text-xs">코치</div>
+
+            {/* 스탬프 애니메이션 (화면 중앙) */}
+            {stampEmoji && (
+              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                <span className="text-8xl animate-bounce drop-shadow-2xl">{stampEmoji}</span>
+              </div>
+            )}
 
             {/* 내 영상 (PIP) */}
             <div className="absolute bottom-3 right-3 w-24 aspect-video bg-gray-700 rounded-lg overflow-hidden shadow-lg border border-white/20">
@@ -233,7 +268,11 @@ function SessionScreen({
                 <div key={msg.id} className={`text-xs ${msg.from === peerId ? 'text-right' : ''}`}>
                   <span className="text-gray-500 text-[10px]">{msg.displayName}</span>
                   <div className={`inline-block px-2 py-1 rounded-lg mt-0.5 max-w-[180px] break-words text-left ${
-                    msg.from === peerId ? 'bg-red-900/60 text-white ml-auto block' : 'bg-gray-800 text-gray-200'
+                    msg.type === 'feedback'
+                      ? 'bg-yellow-900/60 text-yellow-200'
+                      : msg.from === peerId
+                        ? 'bg-red-900/60 text-white ml-auto block'
+                        : 'bg-gray-800 text-gray-200'
                   }`}>
                     {msg.text}
                   </div>

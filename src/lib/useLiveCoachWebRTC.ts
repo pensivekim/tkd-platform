@@ -17,6 +17,7 @@ export interface ChatMessage {
   displayName: string;
   text:        string;
   timestamp:   number;
+  type:        'chat' | 'feedback' | 'stamp';
 }
 
 type SignalRow = {
@@ -98,7 +99,8 @@ export function useLiveCoach(sessionId: string, peerId: string) {
       dataChannelsRef.current.set(participantPeerId, ch);
       ch.onmessage = (msg) => {
         try {
-          const data = JSON.parse(msg.data) as ChatMessage;
+          const raw = JSON.parse(msg.data) as ChatMessage;
+          const data: ChatMessage = { ...raw, type: raw.type ?? 'chat' };
           setMessages((prev) => [...prev, data]);
         } catch {}
       };
@@ -207,14 +209,15 @@ export function useLiveCoach(sessionId: string, peerId: string) {
     setIsCameraOn((v) => !v);
   }, []);
 
-  // 전체 참가자에게 채팅 메시지 전송 (DataChannel)
-  const sendMessage = useCallback((text: string) => {
+  // 전체 참가자에게 채팅/피드백/스탬프 메시지 전송 (DataChannel)
+  const sendMessage = useCallback((text: string, type: ChatMessage['type'] = 'chat') => {
     const msg: ChatMessage = {
       id:          crypto.randomUUID(),
       from:        peerId,
       displayName: "코치",
       text,
       timestamp:   Date.now(),
+      type,
     };
     dataChannelsRef.current.forEach((ch) => {
       if (ch.readyState === "open") ch.send(JSON.stringify(msg));
@@ -292,7 +295,8 @@ export function useLiveCoachParticipant(
     dataChannelRef.current = dc;
     dc.onmessage = (e) => {
       try {
-        const msg = JSON.parse(e.data) as ChatMessage;
+        const raw = JSON.parse(e.data) as ChatMessage;
+        const msg: ChatMessage = { ...raw, type: raw.type ?? 'chat' };
         setMessages((prev) => [...prev, msg]);
       } catch {}
     };
@@ -362,13 +366,14 @@ export function useLiveCoachParticipant(
   }, []);
 
   // 코치에게 채팅 메시지 전송 (DataChannel)
-  const sendMessage = useCallback((text: string) => {
+  const sendMessage = useCallback((text: string, type: ChatMessage['type'] = 'chat') => {
     const msg: ChatMessage = {
       id:          crypto.randomUUID(),
       from:        peerId,
       displayName: displayNameRef.current,
       text,
       timestamp:   Date.now(),
+      type,
     };
     const dc = dataChannelRef.current;
     if (dc?.readyState === "open") dc.send(JSON.stringify(msg));
