@@ -6,10 +6,12 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "pages:deploy": "next build && npx wrangler@4 pages deploy .next --project-name tkd-platform"
+    "pages:build": "npx opennextjs-cloudflare build",
+    "pages:deploy": "npm run pages:build && npx wrangler@4 deploy"
   },
   "dependencies": {
     "@hono/zod-validator": "^0.7.6",
+    "@opennextjs/cloudflare": "^1.17.1",
     "@sentry/nextjs": "^10.42.0",
     "bcryptjs": "^3.0.3",
     "date-fns": "^4.1.0",
