@@ -252,7 +252,7 @@ export default function AttendancePage() {
                           key={type}
                           onClick={() => handleCheck(student.id, type)}
                           disabled={isPending}
-                          className={`flex-1 py-1.5 rounded-lg text-xs font-semibold border transition-colors ${
+                          className={`flex-1 py-2.5 rounded-lg text-xs font-semibold border transition-colors ${
                             isChecked ? style.active : style.inactive
                           }`}
                         >
