@@ -7,6 +7,7 @@ const NAV_ITEMS = [
   { href: '/dashboard', label: '대시보드', icon: '🏠' },
   { href: '/dashboard/students', label: '원생 관리', icon: '👥' },
   { href: '/dashboard/attendance', label: '출석 관리', icon: '✅' },
+  { href: '/dashboard/albums',    label: '앨범 관리', icon: '📸' },
   { href: '/dashboard/notices', label: '공지사항', icon: '📢' },
   { href: '/dashboard/settings', label: '설정', icon: '⚙️' },
 ]
