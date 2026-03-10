@@ -8,6 +8,7 @@ import LoadingSpinner from '@/components/ui/LoadingSpinner'
 import EmptyState from '@/components/ui/EmptyState'
 import ErrorMessage from '@/components/ui/ErrorMessage'
 import type { Album, Photo } from '@/types/album'
+import type { Student } from '@/types/student'
 
 const PHOTOS_URL = process.env.NEXT_PUBLIC_PHOTOS_URL ?? ''
 const photoUrl   = (r2Key: string) => PHOTOS_URL ? `${PHOTOS_URL}/${r2Key}` : `/api/photo-proxy/${r2Key}`
@@ -18,6 +19,7 @@ export default function AlbumDetailPage({ params }: Params) {
   const { id: albumId }         = use(params)
   const [album, setAlbum]       = useState<Album | null>(null)
   const [photos, setPhotos]     = useState<Photo[]>([])
+  const [students, setStudents] = useState<Student[]>([])
   const [isLoading, setIsLoading]   = useState(true)
   const [error, setError]           = useState<string | null>(null)
   const [lightbox, setLightbox]     = useState<Photo | null>(null)
@@ -26,24 +28,32 @@ export default function AlbumDetailPage({ params }: Params) {
   const [uploadError, setUploadError]       = useState<string | null>(null)
   const [deletingId, setDeletingId]         = useState<string | null>(null)
   const [copied, setCopied]                 = useState(false)
+  const [classifying, setClassifying]       = useState(false)
+  const [classifyToast, setClassifyToast]   = useState<string | null>(null)
+  const [taggingId, setTaggingId]           = useState<string | null>(null)
+  const [notifying, setNotifying]           = useState(false)
+  const [notifyToast, setNotifyToast]       = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const fetchData = useCallback(async () => {
     setIsLoading(true)
     setError(null)
     try {
-      const [albumRes, photosRes] = await Promise.all([
+      const [albumRes, photosRes, studentsRes] = await Promise.all([
         fetch(`/api/albums`),
         fetch(`/api/albums/${albumId}/photos`),
+        fetch(`/api/students`),
       ])
-      const albumsData  = await albumRes.json()
-      const photosData  = await photosRes.json()
+      const albumsData   = await albumRes.json()
+      const photosData   = await photosRes.json()
+      const studentsData = await studentsRes.json()
       if (!albumRes.ok)  throw new Error(albumsData.error  ?? '앨범 불러오기 실패')
       if (!photosRes.ok) throw new Error(photosData.error  ?? '사진 불러오기 실패')
 
       const found = (albumsData.albums as Album[])?.find((a) => a.id === albumId) ?? null
       setAlbum(found)
       setPhotos(photosData.photos ?? [])
+      if (studentsRes.ok) setStudents((studentsData.students ?? []).filter((s: Student) => s.status === 'active'))
     } catch (err) {
       captureException(err, { action: 'fetch_album_detail', albumId })
       setError('앨범 정보를 불러오지 못했습니다.')
@@ -82,7 +92,6 @@ export default function AlbumDetailPage({ params }: Params) {
     if (successCount < list.length) {
       setUploadError(`${list.length - successCount}장 업로드에 실패했습니다.`)
     }
-    // photo_count 반영을 위해 앨범 정보 재조회
     fetchData()
   }
 
@@ -118,6 +127,90 @@ export default function AlbumDetailPage({ params }: Params) {
     }
   }
 
+  async function handleNotify() {
+    if (!confirm('확인된 사진의 원생 학부모에게 푸시 알림을 보내시겠습니까?')) return
+    setNotifying(true)
+    setNotifyToast(null)
+    try {
+      const res  = await fetch(`/api/albums/${albumId}/notify`, { method: 'POST' })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error ?? '알림 발송 실패')
+      const msg = data.message ?? `${data.sent}명에게 알림을 보냈습니다`
+      setNotifyToast(msg)
+      setTimeout(() => setNotifyToast(null), 5000)
+    } catch (err) {
+      captureException(err, { action: 'notify_album', albumId })
+      alert('알림 발송에 실패했습니다.')
+    } finally {
+      setNotifying(false)
+    }
+  }
+
+  async function handleClassify() {
+    if (!confirm('AI가 사진을 자동으로 원생과 매칭합니다. 진행할까요?')) return
+    setClassifying(true)
+    setClassifyToast(null)
+    try {
+      const res  = await fetch(`/api/albums/${albumId}/classify`, { method: 'POST' })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error ?? 'AI 분류 실패')
+      setClassifyToast(`${data.classified}장 분류 완료, ${data.unclassified}장 미분류`)
+      setTimeout(() => setClassifyToast(null), 5000)
+      fetchData()
+    } catch (err) {
+      captureException(err, { action: 'classify_album', albumId })
+      alert('AI 자동 분류에 실패했습니다.')
+    } finally {
+      setClassifying(false)
+    }
+  }
+
+  async function handleTag(photoId: string, studentId: string | null) {
+    setTaggingId(photoId)
+    try {
+      const res = await fetch(`/api/albums/${albumId}/photos/${photoId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ student_id: studentId }),
+      })
+      if (!res.ok) throw new Error()
+      setPhotos((prev) => prev.map((p) =>
+        p.id === photoId ? { ...p, student_id: studentId, is_confirmed: studentId ? 1 : 0 } : p
+      ))
+      if (lightbox?.id === photoId) {
+        setLightbox((prev) => prev ? { ...prev, student_id: studentId, is_confirmed: studentId ? 1 : 0 } : prev)
+      }
+    } catch {
+      alert('태깅에 실패했습니다.')
+    } finally {
+      setTaggingId(null)
+    }
+  }
+
+  async function handleConfirmToggle(photo: Photo, e: React.MouseEvent) {
+    e.stopPropagation()
+    const newVal = !photo.is_confirmed
+    try {
+      const res = await fetch(`/api/albums/${albumId}/photos/${photo.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ is_confirmed: newVal }),
+      })
+      if (!res.ok) throw new Error()
+      setPhotos((prev) => prev.map((p) => p.id === photo.id ? { ...p, is_confirmed: newVal ? 1 : 0 } : p))
+      if (lightbox?.id === photo.id) {
+        setLightbox((prev) => prev ? { ...prev, is_confirmed: newVal ? 1 : 0 } : prev)
+      }
+    } catch {
+      alert('확인 처리에 실패했습니다.')
+    }
+  }
+
+  const studentName = (id: string | null) => {
+    if (!id) return null
+    return students.find((s) => s.id === id)?.name ?? '원생'
+  }
+
   if (isLoading) return <LoadingSpinner />
   if (error)     return <ErrorMessage message={error} retry={fetchData} />
 
@@ -150,7 +243,35 @@ export default function AlbumDetailPage({ params }: Params) {
           </div>
         </div>
 
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
+          {/* 학부모 알림 버튼 */}
+          <button
+            onClick={handleNotify}
+            disabled={notifying || photos.length === 0}
+            className="flex items-center gap-1.5 px-3 py-2.5 border border-blue-300 text-blue-700 text-sm font-medium rounded-lg hover:bg-blue-50 transition-colors disabled:opacity-60"
+          >
+            {notifying ? (
+              <>
+                <span className="w-3.5 h-3.5 border-2 border-blue-400/40 border-t-blue-600 rounded-full animate-spin" />
+                발송 중...
+              </>
+            ) : '📣 학부모 알림'}
+          </button>
+
+          {/* AI 자동 분류 버튼 */}
+          <button
+            onClick={handleClassify}
+            disabled={classifying || photos.length === 0}
+            className="flex items-center gap-1.5 px-3 py-2.5 border border-purple-300 text-purple-700 text-sm font-medium rounded-lg hover:bg-purple-50 transition-colors disabled:opacity-60"
+          >
+            {classifying ? (
+              <>
+                <span className="w-3.5 h-3.5 border-2 border-purple-400/40 border-t-purple-600 rounded-full animate-spin" />
+                분류 중...
+              </>
+            ) : '✨ AI 자동 분류'}
+          </button>
+
           {album?.share_token && (
             <button
               onClick={handleCopyLink}
@@ -179,6 +300,22 @@ export default function AlbumDetailPage({ params }: Params) {
           />
         </div>
       </div>
+
+      {/* 알림 발송 토스트 */}
+      {notifyToast && (
+        <div className="mb-4 bg-blue-50 border border-blue-200 rounded-xl px-4 py-3 flex items-center justify-between">
+          <span className="text-sm font-medium text-blue-700">📣 {notifyToast}</span>
+          <button onClick={() => setNotifyToast(null)} className="text-blue-400 hover:text-blue-600 text-lg leading-none">×</button>
+        </div>
+      )}
+
+      {/* AI 분류 결과 토스트 */}
+      {classifyToast && (
+        <div className="mb-4 bg-purple-50 border border-purple-200 rounded-xl px-4 py-3 flex items-center justify-between">
+          <span className="text-sm font-medium text-purple-700">✨ {classifyToast}</span>
+          <button onClick={() => setClassifyToast(null)} className="text-purple-400 hover:text-purple-600 text-lg leading-none">×</button>
+        </div>
+      )}
 
       {/* 업로드 진행률 */}
       {uploading && (
@@ -212,6 +349,7 @@ export default function AlbumDetailPage({ params }: Params) {
         <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 gap-2">
           {photos.map((photo) => {
             const isDeleting = deletingId === photo.id
+            const name = studentName(photo.student_id)
             return (
               <div
                 key={photo.id}
@@ -227,8 +365,8 @@ export default function AlbumDetailPage({ params }: Params) {
 
                 {/* 원생 배지 */}
                 <div className="absolute bottom-0 left-0 right-0 px-1.5 py-1 bg-gradient-to-t from-black/60 to-transparent">
-                  <span className={`text-xs font-medium truncate block ${photo.student_id ? 'text-white' : 'text-white/50'}`}>
-                    {photo.student_id ? '분류됨' : '미분류'}
+                  <span className={`text-xs font-medium truncate block ${name ? 'text-white' : 'text-white/50'}`}>
+                    {name ?? '미분류'}
                   </span>
                 </div>
 
@@ -258,7 +396,7 @@ export default function AlbumDetailPage({ params }: Params) {
             <img
               src={photoUrl(lightbox.r2_key)}
               alt=""
-              className="w-full max-h-[85vh] object-contain rounded-xl"
+              className="w-full max-h-[75vh] object-contain rounded-xl"
             />
             <button
               onClick={() => setLightbox(null)}
@@ -269,8 +407,47 @@ export default function AlbumDetailPage({ params }: Params) {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
             </button>
-            <div className="mt-2 text-center text-white/50 text-xs">
-              {new Date(lightbox.created_at).toLocaleString('ko-KR')}
+
+            {/* 태깅 패널 */}
+            <div className="mt-3 flex flex-wrap items-center gap-2">
+              {/* 원생 선택 드롭다운 */}
+              <select
+                value={lightbox.student_id ?? ''}
+                onChange={(e) => handleTag(lightbox.id, e.target.value || null)}
+                disabled={taggingId === lightbox.id}
+                className="flex-1 min-w-0 px-3 py-2 rounded-lg bg-white/10 text-white text-sm border border-white/20 focus:outline-none focus:ring-2 focus:ring-white/40 disabled:opacity-60"
+              >
+                <option value="">원생 선택 (수동 태깅)</option>
+                {students.map((s) => (
+                  <option key={s.id} value={s.id}>{s.name} ({s.belt})</option>
+                ))}
+              </select>
+
+              {/* 확인 토글 */}
+              <button
+                onClick={(e) => handleConfirmToggle(lightbox, e)}
+                className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium border transition-colors ${
+                  lightbox.is_confirmed
+                    ? 'bg-green-500 border-green-500 text-white'
+                    : 'bg-white/10 border-white/20 text-white/70 hover:bg-white/20'
+                }`}
+              >
+                {lightbox.is_confirmed ? '✓ 확인됨' : '확인'}
+              </button>
+            </div>
+
+            <div className="mt-1.5 flex items-center gap-3">
+              <span className="text-white/40 text-xs">
+                {new Date(lightbox.created_at).toLocaleString('ko-KR')}
+              </span>
+              {lightbox.face_confidence != null && (
+                <span className="text-white/40 text-xs">
+                  AI 신뢰도 {Math.round(lightbox.face_confidence * 100)}%
+                </span>
+              )}
+              {taggingId === lightbox.id && (
+                <span className="text-white/60 text-xs">저장 중...</span>
+              )}
             </div>
           </div>
         </div>

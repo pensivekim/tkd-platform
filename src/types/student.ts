@@ -12,4 +12,6 @@ export interface Student {
   memo: string | null
   created_at: string
   updated_at: string
+  face_r2_key: string | null
+  face_embedding: string | null
 }

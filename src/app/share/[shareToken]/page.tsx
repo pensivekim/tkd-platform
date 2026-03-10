@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { use } from 'react'
 import { captureException } from '@/lib/sentry'
+import { subscribePush } from '@/lib/pushClient'
 import LoadingSpinner from '@/components/ui/LoadingSpinner'
 import type { Album, Photo } from '@/types/album'
 
@@ -18,6 +19,15 @@ export default function ShareAlbumPage({ params }: Params) {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError]         = useState<string | null>(null)
   const [lightbox, setLightbox]   = useState<Photo | null>(null)
+
+  // 푸시 알림 구독
+  const [subscribing, setSubscribing] = useState(false)
+  const [subscribed, setSubscribed]   = useState(false)
+  const [pushSupported, setPushSupported] = useState(false)
+
+  useEffect(() => {
+    setPushSupported(typeof window !== 'undefined' && 'PushManager' in window && !!process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY)
+  }, [])
 
   useEffect(() => {
     async function load() {
@@ -43,6 +53,22 @@ export default function ShareAlbumPage({ params }: Params) {
     a.download = `photo-${photo.id.slice(0, 8)}.jpg`
     a.target = '_blank'
     a.click()
+  }
+
+  async function handleSubscribe() {
+    setSubscribing(true)
+    try {
+      const ok = await subscribePush()
+      if (ok) {
+        setSubscribed(true)
+      } else {
+        alert('알림 권한이 거부되었거나 브라우저가 지원하지 않습니다.')
+      }
+    } catch (err) {
+      captureException(err, { action: 'subscribe_push_share' })
+    } finally {
+      setSubscribing(false)
+    }
   }
 
   return (
@@ -117,6 +143,31 @@ export default function ShareAlbumPage({ params }: Params) {
                     </button>
                   </div>
                 ))}
+              </div>
+            )}
+
+            {/* 📸 새 사진 알림 받기 */}
+            {pushSupported && (
+              <div className="mt-8 bg-white rounded-2xl border border-gray-100 shadow-sm px-5 py-4 flex items-center justify-between gap-4">
+                <div>
+                  <p className="font-semibold text-gray-800 text-sm" style={{ wordBreak: 'keep-all' }}>
+                    📸 새 사진 알림 받기
+                  </p>
+                  <p className="text-xs text-gray-400 mt-0.5" style={{ wordBreak: 'keep-all' }}>
+                    새 사진이 올라오면 알림을 보내드립니다.
+                  </p>
+                </div>
+                <button
+                  onClick={handleSubscribe}
+                  disabled={subscribing || subscribed}
+                  className={`flex-shrink-0 px-4 py-2 rounded-lg text-sm font-semibold transition-colors disabled:opacity-60 ${
+                    subscribed
+                      ? 'bg-green-100 text-green-700'
+                      : 'bg-red-600 text-white hover:bg-red-700'
+                  }`}
+                >
+                  {subscribing ? '등록 중...' : subscribed ? '✓ 등록됨' : '알림 받기'}
+                </button>
               </div>
             )}
           </>

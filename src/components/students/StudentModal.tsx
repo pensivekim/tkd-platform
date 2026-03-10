@@ -1,11 +1,13 @@
 'use client'
 
-import { useState, useEffect, FormEvent } from 'react'
+import { useState, useEffect, useRef, FormEvent } from 'react'
 import { z } from 'zod'
 import { BELT_LIST } from '@/lib/constants'
 import { captureException } from '@/lib/sentry'
 import LoadingSpinner from '@/components/ui/LoadingSpinner'
 import type { Student } from '@/types/student'
+
+const PHOTOS_URL = process.env.NEXT_PUBLIC_PHOTOS_URL ?? ''
 
 const Schema = z.object({
   name: z.string().min(1, '이름을 입력해주세요.'),
@@ -46,6 +48,9 @@ export default function StudentModal({ student, onClose, onSuccess }: StudentMod
   const [errors, setErrors] = useState<Partial<Record<keyof FormData, string>>>({})
   const [serverError, setServerError] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [faceFile, setFaceFile]           = useState<File | null>(null)
+  const [facePreview, setFacePreview]     = useState<string | null>(null)
+  const faceInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     if (student) {
@@ -57,9 +62,12 @@ export default function StudentModal({ student, onClose, onSuccess }: StudentMod
         belt: student.belt,
         memo: student.memo ?? '',
       })
+      setFacePreview(student.face_r2_key && PHOTOS_URL ? `${PHOTOS_URL}/${student.face_r2_key}` : null)
     } else {
       setForm(EMPTY_FORM)
+      setFacePreview(null)
     }
+    setFaceFile(null)
     setErrors({})
     setServerError('')
   }, [student])
@@ -93,9 +101,9 @@ export default function StudentModal({ student, onClose, onSuccess }: StudentMod
 
     setIsSubmitting(true)
     try {
-      const url = isEdit ? `/api/students/${student!.id}` : '/api/students'
+      const url    = isEdit ? `/api/students/${student!.id}` : '/api/students'
       const method = isEdit ? 'PATCH' : 'POST'
-      const res = await fetch(url, {
+      const res    = await fetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(parsed.data),
@@ -105,6 +113,20 @@ export default function StudentModal({ student, onClose, onSuccess }: StudentMod
         setServerError(data.error ?? '저장에 실패했습니다.')
         return
       }
+
+      // 얼굴 사진 업로드 (파일이 선택된 경우)
+      const savedId: string = isEdit ? student!.id : data.student?.id
+      if (faceFile && savedId) {
+        try {
+          const form = new FormData()
+          form.append('image', faceFile)
+          await fetch(`/api/students/${savedId}/face`, { method: 'POST', body: form })
+        } catch (faceErr) {
+          captureException(faceErr, { action: 'upload_face', studentId: savedId })
+          // 얼굴 업로드 실패는 치명적이지 않으므로 계속 진행
+        }
+      }
+
       onSuccess()
       onClose()
     } catch (err) {
@@ -113,6 +135,15 @@ export default function StudentModal({ student, onClose, onSuccess }: StudentMod
     } finally {
       setIsSubmitting(false)
     }
+  }
+
+  function handleFaceChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setFaceFile(file)
+    const reader = new FileReader()
+    reader.onload = (ev) => setFacePreview(ev.target?.result as string)
+    reader.readAsDataURL(file)
   }
 
   return (
@@ -217,6 +248,43 @@ export default function StudentModal({ student, onClose, onSuccess }: StudentMod
               placeholder="특이사항, 알레르기 등"
               disabled={isSubmitting}
               className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent disabled:bg-gray-50 resize-none"
+            />
+          </div>
+
+          {/* 대표 얼굴 사진 */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">대표 얼굴 사진 <span className="text-gray-400 font-normal">(AI 자동 분류용)</span></label>
+            <div className="flex items-center gap-4">
+              {/* 원형 미리보기 */}
+              <div
+                className="w-16 h-16 rounded-full bg-gray-100 border-2 border-dashed border-gray-300 flex items-center justify-center overflow-hidden flex-shrink-0 cursor-pointer"
+                onClick={() => faceInputRef.current?.click()}
+              >
+                {facePreview ? (
+                  <img src={facePreview} alt="얼굴 미리보기" className="w-full h-full object-cover" />
+                ) : (
+                  <span className="text-2xl">👤</span>
+                )}
+              </div>
+              <div className="flex-1">
+                <button
+                  type="button"
+                  onClick={() => faceInputRef.current?.click()}
+                  disabled={isSubmitting}
+                  className="px-3 py-2 text-sm border border-gray-300 rounded-lg text-gray-600 hover:bg-gray-50 transition-colors disabled:opacity-60"
+                >
+                  {facePreview ? '사진 변경' : '사진 선택'}
+                </button>
+                <p className="text-xs text-gray-400 mt-1">정면 사진 1장 권장</p>
+              </div>
+            </div>
+            <input
+              ref={faceInputRef}
+              type="file"
+              accept="image/*"
+              capture="user"
+              className="hidden"
+              onChange={handleFaceChange}
             />
           </div>
 
