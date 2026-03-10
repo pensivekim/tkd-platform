@@ -1,7 +1,11 @@
 // Poomsae database — Taegeuk 1~8 with joint angle definitions
 // Angles computed using MediaPipe Pose landmarks (2D, degrees)
 
-export type JointKey = "leftElbow" | "rightElbow" | "leftKnee" | "rightKnee";
+export type JointKey =
+  | "leftElbow"  | "rightElbow"
+  | "leftKnee"   | "rightKnee"
+  | "leftShoulder" | "rightShoulder"
+  | "leftHip"    | "rightHip";
 
 export interface AngleConstraint {
   joint: JointKey;
@@ -28,10 +32,14 @@ export interface PoomsaeData {
 }
 
 // ── Angle reference ──────────────────────────────────────────────
-// leftElbow:  angle(lm[11], lm[13], lm[15]) — shoulder-elbow-wrist
-// rightElbow: angle(lm[12], lm[14], lm[16])
-// leftKnee:   angle(lm[23], lm[25], lm[27]) — hip-knee-ankle
-// rightKnee:  angle(lm[24], lm[26], lm[28])
+// leftElbow:    angle(lm[11], lm[13], lm[15]) — shoulder-elbow-wrist
+// rightElbow:   angle(lm[12], lm[14], lm[16])
+// leftKnee:     angle(lm[23], lm[25], lm[27]) — hip-knee-ankle
+// rightKnee:    angle(lm[24], lm[26], lm[28])
+// leftShoulder: angle(lm[23], lm[11], lm[13]) — hip-shoulder-elbow
+// rightShoulder:angle(lm[24], lm[12], lm[14])
+// leftHip:      angle(lm[11], lm[23], lm[25]) — shoulder-hip-knee
+// rightHip:     angle(lm[12], lm[24], lm[26])
 //
 // Technique targets (approximate 2D):
 //   아래막기 (low block arm):       ~155° (near extended, angled down)
@@ -68,14 +76,14 @@ const taegeuk1: PoomsaeData = {
   descKo: "아래막기와 몸통지르기를 중심으로 한 기본 품새",
   descEn: "Fundamental poomsae focusing on low block and middle punch",
   moves: [
-    move("왼 아래막기", "Left Low Block", 1500, [a("leftElbow", 155, 20), a("rightKnee", 115, 20)]),
-    move("오른 몸통지르기", "Right Middle Punch", 1200, [a("rightElbow", 168, 15)]),
-    move("오른 아래막기", "Right Low Block", 1500, [a("rightElbow", 155, 20), a("leftKnee", 115, 20)]),
-    move("왼 몸통지르기", "Left Middle Punch", 1200, [a("leftElbow", 168, 15)]),
-    move("왼 아래막기 (전환)", "Left Low Block (Turn)", 1500, [a("leftElbow", 155, 20)]),
-    move("오른·왼 연속 지르기", "Double Punch R+L", 1500, [a("rightElbow", 168, 15), a("leftElbow", 168, 15)]),
-    move("오른 아래막기 (전환)", "Right Low Block (Turn)", 1500, [a("rightElbow", 155, 20)]),
-    move("왼·오른 연속 지르기", "Double Punch L+R", 1500, [a("leftElbow", 168, 15), a("rightElbow", 168, 15)]),
+    move("왼 아래막기", "Left Low Block", 1500, [a("leftElbow", 155, 20), a("rightKnee", 115, 20), a("leftShoulder", 50, 20)]),
+    move("오른 몸통지르기", "Right Middle Punch", 1200, [a("rightElbow", 168, 15), a("rightShoulder", 90, 20)]),
+    move("오른 아래막기", "Right Low Block", 1500, [a("rightElbow", 155, 20), a("leftKnee", 115, 20), a("rightShoulder", 50, 20)]),
+    move("왼 몸통지르기", "Left Middle Punch", 1200, [a("leftElbow", 168, 15), a("leftShoulder", 90, 20)]),
+    move("왼 아래막기 (전환)", "Left Low Block (Turn)", 1500, [a("leftElbow", 155, 20), a("leftShoulder", 50, 20)]),
+    move("오른·왼 연속 지르기", "Double Punch R+L", 1500, [a("rightElbow", 168, 15), a("leftElbow", 168, 15), a("rightShoulder", 90, 20)]),
+    move("오른 아래막기 (전환)", "Right Low Block (Turn)", 1500, [a("rightElbow", 155, 20), a("rightShoulder", 50, 20)]),
+    move("왼·오른 연속 지르기", "Double Punch L+R", 1500, [a("leftElbow", 168, 15), a("rightElbow", 168, 15), a("leftShoulder", 90, 20)]),
   ],
 };
 
@@ -89,14 +97,14 @@ const taegeuk2: PoomsaeData = {
   descKo: "얼굴막기가 추가된 품새",
   descEn: "Poomsae introducing the high face block",
   moves: [
-    move("왼 아래막기", "Left Low Block", 1500, [a("leftElbow", 155, 20)]),
-    move("오른 몸통지르기", "Right Middle Punch", 1200, [a("rightElbow", 168, 15)]),
-    move("오른 얼굴막기", "Right High Block", 1500, [a("rightElbow", 100, 20)]),
-    move("왼 몸통지르기", "Left Middle Punch", 1200, [a("leftElbow", 168, 15)]),
-    move("왼 아래막기", "Left Low Block", 1500, [a("leftElbow", 155, 20)]),
-    move("오른 얼굴막기", "Right High Block", 1500, [a("rightElbow", 100, 20)]),
-    move("오른 아래막기", "Right Low Block", 1500, [a("rightElbow", 155, 20)]),
-    move("왼 얼굴막기", "Left High Block", 1500, [a("leftElbow", 100, 20)]),
+    move("왼 아래막기", "Left Low Block", 1500, [a("leftElbow", 155, 20), a("leftShoulder", 50, 20)]),
+    move("오른 몸통지르기", "Right Middle Punch", 1200, [a("rightElbow", 168, 15), a("rightShoulder", 90, 20)]),
+    move("오른 얼굴막기", "Right High Block", 1500, [a("rightElbow", 100, 20), a("rightShoulder", 55, 20)]),
+    move("왼 몸통지르기", "Left Middle Punch", 1200, [a("leftElbow", 168, 15), a("leftShoulder", 90, 20)]),
+    move("왼 아래막기", "Left Low Block", 1500, [a("leftElbow", 155, 20), a("leftShoulder", 50, 20)]),
+    move("오른 얼굴막기", "Right High Block", 1500, [a("rightElbow", 100, 20), a("rightShoulder", 55, 20)]),
+    move("오른 아래막기", "Right Low Block", 1500, [a("rightElbow", 155, 20), a("rightShoulder", 50, 20)]),
+    move("왼 얼굴막기", "Left High Block", 1500, [a("leftElbow", 100, 20), a("leftShoulder", 55, 20)]),
   ],
 };
 
@@ -110,14 +118,14 @@ const taegeuk3: PoomsaeData = {
   descKo: "몸통막기와 손날목치기가 포함된 품새",
   descEn: "Poomsae with middle block and knife-hand strike",
   moves: [
-    move("왼 아래막기", "Left Low Block", 1500, [a("leftElbow", 155, 20)]),
-    move("오른 몸통막기", "Right Middle Block", 1500, [a("rightElbow", 90, 20)]),
-    move("왼 손날목치기", "Left Knife-Hand Strike", 1500, [a("leftElbow", 120, 20)]),
-    move("오른 몸통지르기", "Right Middle Punch", 1200, [a("rightElbow", 168, 15)]),
-    move("오른 아래막기", "Right Low Block", 1500, [a("rightElbow", 155, 20)]),
-    move("왼 몸통막기", "Left Middle Block", 1500, [a("leftElbow", 90, 20)]),
-    move("오른 손날목치기", "Right Knife-Hand Strike", 1500, [a("rightElbow", 120, 20)]),
-    move("왼 몸통지르기", "Left Middle Punch", 1200, [a("leftElbow", 168, 15)]),
+    move("왼 아래막기", "Left Low Block", 1500, [a("leftElbow", 155, 20), a("leftShoulder", 50, 20)]),
+    move("오른 몸통막기", "Right Middle Block", 1500, [a("rightElbow", 90, 20), a("rightShoulder", 85, 20)]),
+    move("왼 손날목치기", "Left Knife-Hand Strike", 1500, [a("leftElbow", 120, 20), a("leftShoulder", 75, 20)]),
+    move("오른 몸통지르기", "Right Middle Punch", 1200, [a("rightElbow", 168, 15), a("rightShoulder", 90, 20)]),
+    move("오른 아래막기", "Right Low Block", 1500, [a("rightElbow", 155, 20), a("rightShoulder", 50, 20)]),
+    move("왼 몸통막기", "Left Middle Block", 1500, [a("leftElbow", 90, 20), a("leftShoulder", 85, 20)]),
+    move("오른 손날목치기", "Right Knife-Hand Strike", 1500, [a("rightElbow", 120, 20), a("rightShoulder", 75, 20)]),
+    move("왼 몸통지르기", "Left Middle Punch", 1200, [a("leftElbow", 168, 15), a("leftShoulder", 90, 20)]),
   ],
 };
 
@@ -131,14 +139,14 @@ const taegeuk4: PoomsaeData = {
   descKo: "앞차기와 옆차기가 추가된 품새",
   descEn: "Poomsae adding front kick and side kick",
   moves: [
-    move("왼 아래막기", "Left Low Block", 1500, [a("leftElbow", 155, 20)]),
-    move("오른 앞차기", "Right Front Kick", 1500, [a("rightKnee", 70, 20)]),
-    move("오른 아래막기", "Right Low Block", 1500, [a("rightElbow", 155, 20)]),
-    move("왼 앞차기", "Left Front Kick", 1500, [a("leftKnee", 70, 20)]),
-    move("왼 몸통막기", "Left Middle Block", 1500, [a("leftElbow", 90, 20)]),
-    move("오른 옆차기", "Right Side Kick", 1500, [a("rightKnee", 160, 20)]),
-    move("오른 몸통막기", "Right Middle Block", 1500, [a("rightElbow", 90, 20)]),
-    move("왼 옆차기", "Left Side Kick", 1500, [a("leftKnee", 160, 20)]),
+    move("왼 아래막기", "Left Low Block", 1500, [a("leftElbow", 155, 20), a("leftShoulder", 50, 20)]),
+    move("오른 앞차기", "Right Front Kick", 1500, [a("rightKnee", 70, 20), a("rightHip", 65, 20)]),
+    move("오른 아래막기", "Right Low Block", 1500, [a("rightElbow", 155, 20), a("rightShoulder", 50, 20)]),
+    move("왼 앞차기", "Left Front Kick", 1500, [a("leftKnee", 70, 20), a("leftHip", 65, 20)]),
+    move("왼 몸통막기", "Left Middle Block", 1500, [a("leftElbow", 90, 20), a("leftShoulder", 85, 20)]),
+    move("오른 옆차기", "Right Side Kick", 1500, [a("rightKnee", 160, 20), a("rightHip", 90, 20)]),
+    move("오른 몸통막기", "Right Middle Block", 1500, [a("rightElbow", 90, 20), a("rightShoulder", 85, 20)]),
+    move("왼 옆차기", "Left Side Kick", 1500, [a("leftKnee", 160, 20), a("leftHip", 90, 20)]),
   ],
 };
 

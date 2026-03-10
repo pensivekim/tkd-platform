@@ -8,6 +8,8 @@ import { useI18n } from "@/lib/i18n";
 import { getPoomsae } from "@/lib/poomsae-data";
 import { PoomsaeScoringEngine, visibilityScore, resetStability } from "@/lib/pose-scoring";
 import type { Landmark, PoomsaeScoringResult } from "@/lib/pose-scoring";
+import { getDevicePerformance, TIER_LABEL } from "@/lib/devicePerformance";
+import PoseOverlay from "@/components/ai/PoseOverlay";
 
 declare global {
   interface Window {
@@ -46,14 +48,19 @@ export default function PoomsaeSessionPage({ params }: { params: Promise<{ pooms
   const searchParams = useSearchParams();
   const poomsae = getPoomsae(poomsaeId);
 
+  const devPerfRef = useRef(getDevicePerformance());
+  const devPerf = devPerfRef.current;
+
   const [phase, setPhase] = useState<Phase>("prep");
   const [poseReady, setPoseReady] = useState(false);
   const [visibility, setVisibility] = useState(0);
+  const [landmarks, setLandmarks] = useState<Landmark[] | null>(null);
   const [score, setScore] = useState<PoomsaeScoringResult | null>(null);
   const [finalScore, setFinalScore] = useState<PoomsaeScoringResult | null>(null);
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
   const [showNameModal, setShowNameModal] = useState(false);
   const [studentName, setStudentName] = useState('');
+  const [showPerfToast, setShowPerfToast] = useState(false);
   const pendingSaveRef = useRef<PoomsaeScoringResult | null>(null);
   const startTimeRef = useRef<number>(0);
 
@@ -83,14 +90,15 @@ export default function PoomsaeSessionPage({ params }: { params: Promise<{ pooms
       const pose = new window.Pose({
         locateFile: (file: string) => `https://cdn.jsdelivr.net/npm/@mediapipe/pose@0.5.1675469404/${file}`,
       });
-      pose.setOptions({ modelComplexity: 1, smoothLandmarks: true, minDetectionConfidence: 0.5, minTrackingConfidence: 0.5 });
+      pose.setOptions({ modelComplexity: devPerf.modelComplexity, smoothLandmarks: true, minDetectionConfidence: 0.5, minTrackingConfidence: 0.5 });
       pose.onResults(results => {
         if (!results.poseLandmarks) return;
+        setLandmarks(results.poseLandmarks);
         onLandmarks(results.poseLandmarks, performance.now());
       });
       const camera = new window.Camera(video, {
         onFrame: async () => { if (video.readyState >= 2) await pose.send({ image: video }); },
-        width: 640, height: 480,
+        width: devPerf.videoConstraints.width, height: devPerf.videoConstraints.height,
       });
       camera.start();
       setPoseReady(true);
@@ -131,11 +139,20 @@ export default function PoomsaeSessionPage({ params }: { params: Promise<{ pooms
   // Start camera on mount for prep phase
   useEffect(() => {
     if (!poomsae) return;
-    navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" }, audio: false })
+    const vc = devPerf.videoConstraints;
+    navigator.mediaDevices.getUserMedia({
+      video: { facingMode: "user", width: vc.width, height: vc.height, frameRate: vc.frameRate },
+      audio: false,
+    })
       .then(stream => {
         if (videoRef.current) videoRef.current.srcObject = stream;
       })
       .catch(console.error);
+
+    if (devPerf.tier === 'low') {
+      setShowPerfToast(true);
+      setTimeout(() => setShowPerfToast(false), 4000);
+    }
 
     initPose((lms, _ts) => {
       const vis = visibilityScore(lms);
@@ -373,6 +390,12 @@ export default function PoomsaeSessionPage({ params }: { params: Promise<{ pooms
               <div style={{ position: "relative", background: "#080810", borderRadius: 12, overflow: "hidden", border: `2px solid ${poomsae.color}50`, aspectRatio: "4/3" }}>
                 <video ref={videoRef} autoPlay playsInline muted
                   style={{ width: "100%", height: "100%", objectFit: "cover", transform: "scaleX(-1)" }} />
+                <PoseOverlay
+                  videoRef={videoRef}
+                  landmarks={landmarks}
+                  enabled={poseReady}
+                  currentMove={score ? poomsae.moves[Math.min(score.currentMoveIndex, poomsae.moves.length - 1)] : undefined}
+                />
                 {/* Current move overlay */}
                 {score && (
                   <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, background: "rgba(0,0,0,0.75)", backdropFilter: "blur(6px)", padding: "10px 16px" }}>
@@ -383,7 +406,7 @@ export default function PoomsaeSessionPage({ params }: { params: Promise<{ pooms
                   </div>
                 )}
                 <div style={{ position: "absolute", top: 10, right: 10, background: "rgba(0,0,0,0.7)", borderRadius: 8, padding: "4px 10px", fontSize: 12, color: "#4ade80" }}>
-                  {poseReady ? "AI 🟢" : "AI 로딩..."}
+                  {poseReady ? `AI 🟢 · ${TIER_LABEL[devPerf.tier]}` : "AI 로딩..."}
                 </div>
               </div>
               {/* Progress bar */}
@@ -486,6 +509,18 @@ export default function PoomsaeSessionPage({ params }: { params: Promise<{ pooms
           </div>
         )}
       </div>
+
+      {/* 성능 최적화 토스트 */}
+      {showPerfToast && (
+        <div style={{
+          position: "fixed", bottom: 24, left: "50%", transform: "translateX(-50%)",
+          background: "rgba(14,14,24,0.95)", border: "1px solid rgba(233,196,106,0.4)",
+          borderRadius: 10, padding: "10px 18px", fontSize: 13, color: "#E9C46A",
+          zIndex: 200, whiteSpace: "nowrap", boxShadow: "0 4px 20px rgba(0,0,0,0.5)",
+        }}>
+          ⚡ 저사양 기기 감지 — 절전 모드로 실행 중
+        </div>
+      )}
 
       {/* 이름 입력 모달 */}
       {showNameModal && (

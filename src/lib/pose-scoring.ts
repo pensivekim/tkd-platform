@@ -33,8 +33,20 @@ function angle(a: Landmark, b: Landmark, c: Landmark): number {
   return calculateAngle(a, b, c);
 }
 
+// Pivot landmark index for each joint (exported for PoseOverlay color coding)
+export const PIVOT_IDX: Record<JointKey, number> = {
+  leftElbow:    LM.LEFT_ELBOW,
+  rightElbow:   LM.RIGHT_ELBOW,
+  leftKnee:     LM.LEFT_KNEE,
+  rightKnee:    LM.RIGHT_KNEE,
+  leftShoulder: LM.LEFT_SHOULDER,
+  rightShoulder:LM.RIGHT_SHOULDER,
+  leftHip:      LM.LEFT_HIP,
+  rightHip:     LM.RIGHT_HIP,
+};
+
 // Get angle for a named joint key
-function getJointAngle(landmarks: Landmark[], joint: JointKey): number | null {
+export function getJointAngle(landmarks: Landmark[], joint: JointKey): number | null {
   try {
     switch (joint) {
       case "leftElbow":
@@ -45,6 +57,14 @@ function getJointAngle(landmarks: Landmark[], joint: JointKey): number | null {
         return angle(landmarks[LM.LEFT_HIP], landmarks[LM.LEFT_KNEE], landmarks[LM.LEFT_ANKLE]);
       case "rightKnee":
         return angle(landmarks[LM.RIGHT_HIP], landmarks[LM.RIGHT_KNEE], landmarks[LM.RIGHT_ANKLE]);
+      case "leftShoulder":
+        return angle(landmarks[LM.LEFT_HIP], landmarks[LM.LEFT_SHOULDER], landmarks[LM.LEFT_ELBOW]);
+      case "rightShoulder":
+        return angle(landmarks[LM.RIGHT_HIP], landmarks[LM.RIGHT_SHOULDER], landmarks[LM.RIGHT_ELBOW]);
+      case "leftHip":
+        return angle(landmarks[LM.LEFT_SHOULDER], landmarks[LM.LEFT_HIP], landmarks[LM.LEFT_KNEE]);
+      case "rightHip":
+        return angle(landmarks[LM.RIGHT_SHOULDER], landmarks[LM.RIGHT_HIP], landmarks[LM.RIGHT_KNEE]);
       default:
         return null;
     }
@@ -144,11 +164,17 @@ export interface PoomsaeScore {
 function accuracyScore(landmarks: Landmark[]): number {
   const checks: Array<{ val: number | null; ideal: number; tol: number }> = [
     // Arm extension check (should not be hyper-extended or fully collapsed)
-    { val: getJointAngle(landmarks, "leftElbow"), ideal: 140, tol: 40 },
-    { val: getJointAngle(landmarks, "rightElbow"), ideal: 140, tol: 40 },
-    // Knee check (some bend in stance — not locked straight or fully crouched)
-    { val: getJointAngle(landmarks, "leftKnee"), ideal: 130, tol: 40 },
-    { val: getJointAngle(landmarks, "rightKnee"), ideal: 130, tol: 40 },
+    { val: getJointAngle(landmarks, "leftElbow"),    ideal: 140, tol: 40 },
+    { val: getJointAngle(landmarks, "rightElbow"),   ideal: 140, tol: 40 },
+    // Knee check (some bend in stance)
+    { val: getJointAngle(landmarks, "leftKnee"),     ideal: 130, tol: 40 },
+    { val: getJointAngle(landmarks, "rightKnee"),    ideal: 130, tol: 40 },
+    // Shoulder elevation check (arm should not be fully dropped or over-raised)
+    { val: getJointAngle(landmarks, "leftShoulder"), ideal: 80,  tol: 40 },
+    { val: getJointAngle(landmarks, "rightShoulder"),ideal: 80,  tol: 40 },
+    // Hip/stance check (not fully collapsed or hyper-extended)
+    { val: getJointAngle(landmarks, "leftHip"),      ideal: 140, tol: 40 },
+    { val: getJointAngle(landmarks, "rightHip"),     ideal: 140, tol: 40 },
   ];
 
   let total = 0;
@@ -209,8 +235,13 @@ function computeMoveAccuracy(landmarks: Landmark[], move: PoomsaeMove): number {
   for (const constraint of move.angles) {
     const val = getJointAngle(landmarks, constraint.joint);
     if (val === null) continue;
+    // z-coordinate side-movement tolerance: if the pivot is turned away from camera
+    // (|z| > 0.15), relax tolerance by 1.3× to avoid false negatives
+    const pivotIdx = PIVOT_IDX[constraint.joint];
+    const zFactor = (landmarks[pivotIdx] && Math.abs(landmarks[pivotIdx].z) > 0.15) ? 1.3 : 1.0;
+    const effectiveTol = constraint.tolerance * zFactor;
     const diff = Math.abs(val - constraint.target);
-    totalScore += Math.max(0, 100 - (diff / constraint.tolerance) * 100);
+    totalScore += Math.max(0, 100 - (diff / effectiveTol) * 100);
     count++;
   }
   return count === 0 ? 70 : totalScore / count;
