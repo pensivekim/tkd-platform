@@ -63,6 +63,7 @@ CREATE TABLE IF NOT EXISTS attendance (
   id         TEXT PRIMARY KEY,
   dojang_id  TEXT NOT NULL REFERENCES dojangs(id),
   student_id TEXT NOT NULL REFERENCES students(id),
+  date       TEXT NOT NULL,                                        -- YYYY-MM-DD (출석 날짜)
   checked_at TEXT NOT NULL DEFAULT (datetime('now')),
   type       TEXT NOT NULL DEFAULT '출석',                         -- '출석' | '결석' | '조퇴'
   memo       TEXT

@@ -24,7 +24,8 @@ jobs:
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: pages deploy .next --project-name=dojangwan
+          wranglerVersion: '4'
+          command: pages deploy .next --project-name tkd-platform --commit-dirty=true
 
       - name: Smoke test
         run: |
