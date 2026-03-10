@@ -19,6 +19,23 @@ const BELT_COLORS: Record<string, string> = {
   '검은띠': 'bg-gray-800 text-white',
 }
 
+function GradeBadge({ s }: { s: Student }) {
+  if (!s.grade_type || !s.dan_grade) return null
+  const label =
+    s.grade_type === 'dan'  ? `${s.dan_grade}단` :
+    s.grade_type === 'poom' ? `${s.dan_grade}품` :
+                              `${s.dan_grade}급`
+  const cls =
+    s.grade_type === 'dan'  ? 'bg-yellow-100 text-yellow-800 border border-yellow-300' :
+    s.grade_type === 'poom' ? 'bg-purple-100 text-purple-800 border border-purple-300' :
+                              'bg-gray-100 text-gray-600 border border-gray-300'
+  return (
+    <span className={`inline-flex px-1.5 py-0.5 rounded text-xs font-semibold ${cls}`}>
+      {label}
+    </span>
+  )
+}
+
 export default function StudentsPage() {
   const { t } = useI18n()
   const [students, setStudents] = useState<Student[]>([])
@@ -143,9 +160,12 @@ export default function StudentsPage() {
                   <tr key={s.id} className="hover:bg-gray-50 transition-colors">
                     <td className="px-4 py-3 font-medium text-gray-900">{s.name}</td>
                     <td className="px-4 py-3">
-                      <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${BELT_COLORS[s.belt] ?? 'bg-gray-100 text-gray-600'}`}>
-                        {s.belt}
-                      </span>
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${BELT_COLORS[s.belt] ?? 'bg-gray-100 text-gray-600'}`}>
+                          {s.belt}
+                        </span>
+                        <GradeBadge s={s} />
+                      </div>
                     </td>
                     <td className="px-4 py-3 text-gray-500">{s.phone ?? '—'}</td>
                     <td className="px-4 py-3 text-gray-500">{s.parent_phone ?? '—'}</td>
@@ -182,9 +202,12 @@ export default function StudentsPage() {
                     <p className="font-semibold text-gray-900">{s.name}</p>
                     <p className="text-xs text-gray-400 mt-0.5">{s.joined_at.slice(0, 10)} 등록</p>
                   </div>
-                  <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${BELT_COLORS[s.belt] ?? 'bg-gray-100 text-gray-600'}`}>
-                    {s.belt}
-                  </span>
+                  <div className="flex items-center gap-1.5 flex-wrap justify-end">
+                    <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${BELT_COLORS[s.belt] ?? 'bg-gray-100 text-gray-600'}`}>
+                      {s.belt}
+                    </span>
+                    <GradeBadge s={s} />
+                  </div>
                 </div>
                 <div className="space-y-1 text-sm text-gray-500 mb-3">
                   {s.phone && <p>📱 {s.phone}</p>}

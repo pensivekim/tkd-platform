@@ -2,16 +2,21 @@ import { NextRequest } from 'next/server'
 import { z } from 'zod'
 import { authFromRequest } from '@/lib/auth'
 import { captureException } from '@/lib/sentry'
-import { BELT_LIST } from '@/lib/constants'
+import { BELT_LIST, generateCertNumber } from '@/lib/constants'
 
 const UpdateStudentSchema = z.object({
-  name: z.string().min(1).max(50).optional(),
-  birth_date: z.string().nullable().optional(),
-  phone: z.string().nullable().optional(),
-  parent_phone: z.string().nullable().optional(),
-  belt: z.enum(BELT_LIST).optional(),
-  memo: z.string().nullable().optional(),
-  status: z.enum(['active', 'inactive']).optional(),
+  name:           z.string().min(1).max(50).optional(),
+  birth_date:     z.string().nullable().optional(),
+  phone:          z.string().nullable().optional(),
+  parent_phone:   z.string().nullable().optional(),
+  belt:           z.enum(BELT_LIST).optional(),
+  memo:           z.string().nullable().optional(),
+  status:         z.enum(['active', 'inactive']).optional(),
+  grade_type:     z.enum(['dan', 'poom', 'gup']).nullable().optional(),
+  dan_grade:      z.number().int().min(1).max(9).nullable().optional(),
+  kukkiwon_id:    z.string().max(50).nullable().optional(),
+  cert_number:    z.string().max(30).nullable().optional(),
+  cert_issued_at: z.string().nullable().optional(),
 })
 
 type Params = { params: Promise<{ id: string }> }
@@ -77,6 +82,20 @@ export async function PATCH(req: NextRequest, { params }: Params) {
     if (data.belt !== undefined)         { fields.push('belt = ?');         values.push(data.belt) }
     if (data.memo !== undefined)         { fields.push('memo = ?');         values.push(data.memo) }
     if (data.status !== undefined)       { fields.push('status = ?');       values.push(data.status) }
+    if (data.grade_type !== undefined)   { fields.push('grade_type = ?');   values.push(data.grade_type) }
+    if (data.dan_grade !== undefined)    { fields.push('dan_grade = ?');    values.push(data.dan_grade) }
+    if (data.kukkiwon_id !== undefined)  { fields.push('kukkiwon_id = ?');  values.push(data.kukkiwon_id) }
+    if (data.cert_issued_at !== undefined){ fields.push('cert_issued_at = ?'); values.push(data.cert_issued_at) }
+    // cert_number: 자동 생성 or 수동 입력
+    if (data.cert_number !== undefined) {
+      let certNum = data.cert_number
+      if (data.grade_type && !certNum) {
+        const countRow = await db.prepare('SELECT COUNT(*) as cnt FROM students WHERE dojang_id = ? AND cert_number IS NOT NULL').bind(payload.dojanId).first() as { cnt: number } | null
+        certNum = generateCertNumber(payload.dojanId ?? 'UNKN', (countRow?.cnt ?? 0) + 1)
+      }
+      fields.push('cert_number = ?')
+      values.push(certNum)
+    }
 
     if (fields.length === 0) return Response.json({ error: '변경할 내용이 없습니다.' }, { status: 400 })
 
