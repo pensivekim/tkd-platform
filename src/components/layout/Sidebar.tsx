@@ -9,6 +9,7 @@ const NAV_ITEMS = [
   { href: '/dashboard/attendance', label: '출석 관리', icon: '✅' },
   { href: '/dashboard/albums',    label: '앨범 관리',   icon: '📸' },
   { href: '/dashboard/coaching',  label: '라이브 코칭', icon: '🎯' },
+  { href: '/dashboard/poomsae',   label: '품새 기록',   icon: '🥋' },
   { href: '/dashboard/notices', label: '공지사항', icon: '📢' },
   { href: '/dashboard/settings', label: '설정', icon: '⚙️' },
 ]

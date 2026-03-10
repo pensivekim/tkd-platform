@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { use } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { useI18n } from "@/lib/i18n";
 import { getPoomsae } from "@/lib/poomsae-data";
 import { PoomsaeScoringEngine, visibilityScore, resetStability } from "@/lib/pose-scoring";
@@ -42,6 +43,7 @@ function ScoreBar({ label, value, color }: { label: string; value: number; color
 export default function PoomsaeSessionPage({ params }: { params: Promise<{ poomsaeId: string }> }) {
   const { poomsaeId } = use(params);
   const { t } = useI18n();
+  const searchParams = useSearchParams();
   const poomsae = getPoomsae(poomsaeId);
 
   const [phase, setPhase] = useState<Phase>("prep");
@@ -49,6 +51,11 @@ export default function PoomsaeSessionPage({ params }: { params: Promise<{ pooms
   const [visibility, setVisibility] = useState(0);
   const [score, setScore] = useState<PoomsaeScoringResult | null>(null);
   const [finalScore, setFinalScore] = useState<PoomsaeScoringResult | null>(null);
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
+  const [showNameModal, setShowNameModal] = useState(false);
+  const [studentName, setStudentName] = useState('');
+  const pendingSaveRef = useRef<PoomsaeScoringResult | null>(null);
+  const startTimeRef = useRef<number>(0);
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const engineRef = useRef<PoomsaeScoringEngine | null>(null);
@@ -115,6 +122,42 @@ export default function PoomsaeSessionPage({ params }: { params: Promise<{ pooms
     };
   }, [poomsae, initPose]);
 
+  // 결과 저장 함수
+  const saveResult = useCallback(async (result: PoomsaeScoringResult, name: string) => {
+    if (!poomsae) return;
+    const dojanId = searchParams.get('dojang_id');
+    const duration = startTimeRef.current
+      ? Math.round((Date.now() - startTimeRef.current) / 1000)
+      : null;
+    setSaveStatus('saving');
+    try {
+      const url = dojanId
+        ? `/api/poomsae/result?dojang_id=${encodeURIComponent(dojanId)}`
+        : '/api/poomsae/result';
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          student_name:     name,
+          poomsae_id:       poomsae.id,
+          poomsae_name:     poomsae.nameKo,
+          total_score:      result.total,
+          accuracy:         result.accuracy,
+          symmetry:         result.symmetry,
+          stability:        result.stability,
+          timing:           result.timing,
+          completeness:     result.completeness,
+          duration_seconds: duration,
+          mode:             'practice',
+          dojang_id:        dojanId ?? undefined,
+        }),
+      });
+      setSaveStatus(res.ok ? 'saved' : 'error');
+    } catch {
+      setSaveStatus('error');
+    }
+  }, [poomsae, searchParams]);
+
   const handleStart = () => {
     if (!poomsae) return;
     cleanupRef.current?.();
@@ -123,6 +166,8 @@ export default function PoomsaeSessionPage({ params }: { params: Promise<{ pooms
     engineRef.current = new PoomsaeScoringEngine(poomsae);
     setPoseReady(false);
     setScore(null);
+    setSaveStatus('idle');
+    startTimeRef.current = Date.now();
     setPhase("performing");
 
     // Re-init with scoring callback
@@ -134,6 +179,15 @@ export default function PoomsaeSessionPage({ params }: { params: Promise<{ pooms
         if (result.done) {
           setFinalScore(result);
           setPhase("result");
+          // 이름 입력 모달 (저장용)
+          pendingSaveRef.current = result;
+          const saved = typeof window !== 'undefined' ? localStorage.getItem('poomsae_student_name') : null;
+          if (saved) {
+            setStudentName(saved);
+            saveResult(result, saved);
+          } else {
+            setShowNameModal(true);
+          }
         }
       });
     }, 100);
@@ -145,6 +199,8 @@ export default function PoomsaeSessionPage({ params }: { params: Promise<{ pooms
     setPoseReady(false);
     setScore(null);
     setFinalScore(null);
+    setSaveStatus('idle');
+    setShowNameModal(false);
     setPhase("prep");
     engineRef.current = null;
 
@@ -331,6 +387,19 @@ export default function PoomsaeSessionPage({ params }: { params: Promise<{ pooms
               </div>
             </div>
 
+            {/* 저장 상태 표시 */}
+            <div style={{ textAlign: "center", marginBottom: 14, minHeight: 28 }}>
+              {saveStatus === 'saving' && (
+                <span style={{ fontSize: 13, color: "#808090" }}>⏳ 기록 저장 중...</span>
+              )}
+              {saveStatus === 'saved' && (
+                <span style={{ fontSize: 13, color: "#4ade80" }}>✅ 기록 저장됨 ({studentName})</span>
+              )}
+              {saveStatus === 'error' && (
+                <span style={{ fontSize: 13, color: "#E63946" }}>⚠️ 저장 실패 (결과는 유지됩니다)</span>
+              )}
+            </div>
+
             <div style={{ display: "flex", gap: 10 }}>
               <button onClick={handleRetry} style={{
                 flex: 1, padding: "14px", borderRadius: 10, cursor: "pointer",
@@ -351,6 +420,69 @@ export default function PoomsaeSessionPage({ params }: { params: Promise<{ pooms
           </div>
         )}
       </div>
+
+      {/* 이름 입력 모달 */}
+      {showNameModal && (
+        <div style={{
+          position: "fixed", inset: 0, background: "rgba(0,0,0,0.75)",
+          zIndex: 100, display: "flex", alignItems: "center", justifyContent: "center", padding: 16,
+        }}>
+          <div style={{
+            background: "#0E0E18", borderRadius: 16, padding: 28,
+            width: "100%", maxWidth: 360, border: "1px solid rgba(255,255,255,0.12)",
+          }}>
+            <div style={{ fontSize: 16, fontWeight: 700, marginBottom: 6 }}>기록 저장</div>
+            <div style={{ fontSize: 13, color: "#606070", marginBottom: 20 }}>이름을 입력하면 연습 기록이 저장됩니다.</div>
+            <input
+              type="text"
+              value={studentName}
+              onChange={e => setStudentName(e.target.value)}
+              placeholder="이름 입력"
+              maxLength={20}
+              autoFocus
+              onKeyDown={e => {
+                if (e.key === 'Enter' && studentName.trim() && pendingSaveRef.current) {
+                  localStorage.setItem('poomsae_student_name', studentName.trim());
+                  setShowNameModal(false);
+                  saveResult(pendingSaveRef.current, studentName.trim());
+                }
+              }}
+              style={{
+                width: "100%", padding: "10px 14px", borderRadius: 8, fontSize: 14,
+                background: "#161620", border: "1px solid rgba(255,255,255,0.15)",
+                color: "#F0F0F5", marginBottom: 14, boxSizing: "border-box",
+              }}
+            />
+            <div style={{ display: "flex", gap: 10 }}>
+              <button
+                onClick={() => { setShowNameModal(false); setSaveStatus('idle'); }}
+                style={{
+                  flex: 1, padding: "10px", borderRadius: 8, cursor: "pointer",
+                  background: "transparent", color: "#606070",
+                  border: "1px solid rgba(255,255,255,0.1)", fontSize: 14,
+                }}>
+                건너뛰기
+              </button>
+              <button
+                disabled={!studentName.trim()}
+                onClick={() => {
+                  if (!studentName.trim() || !pendingSaveRef.current) return;
+                  localStorage.setItem('poomsae_student_name', studentName.trim());
+                  setShowNameModal(false);
+                  saveResult(pendingSaveRef.current, studentName.trim());
+                }}
+                style={{
+                  flex: 2, padding: "10px", borderRadius: 8, cursor: studentName.trim() ? "pointer" : "not-allowed",
+                  background: studentName.trim() ? "#E63946" : "rgba(255,255,255,0.05)",
+                  color: studentName.trim() ? "#fff" : "#404050",
+                  border: "none", fontWeight: 700, fontSize: 14,
+                }}>
+                저장
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
