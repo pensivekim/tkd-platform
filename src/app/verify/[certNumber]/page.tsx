@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useParams } from 'next/navigation'
 import Link from 'next/link'
+import { QRCodeSVG } from 'qrcode.react'
 
 interface CertData {
   student_name: string
@@ -79,6 +80,10 @@ export default function VerifyPage() {
                                  'text-gray-600'
 
   const hasNft = !!cert.nft_token_id
+  const verifyUrl = `https://tkd.genomic.cc/verify/${cert.cert_number}`
+  const polygonscanUrl = cert.nft_tx_hash
+    ? `https://polygonscan.com/tx/${cert.nft_tx_hash}`
+    : null
 
   return (
     <div className="min-h-screen bg-gray-50 py-12 px-4">
@@ -146,14 +151,38 @@ export default function VerifyPage() {
           )}
         </div>
 
-        {/* 블록체인 상태 */}
-        <div className={`flex items-center justify-center gap-2 py-2 px-4 rounded-full text-xs font-medium w-fit mx-auto ${hasNft ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-400'}`}>
-          <span>{hasNft ? '⛓' : '○'}</span>
-          <span>{hasNft ? '블록체인 등록 완료' : '블록체인 등록 준비 중'}</span>
-          {hasNft && cert.nft_tx_hash && (
-            <span className="font-mono text-xs opacity-60 ml-1">{cert.nft_tx_hash.slice(0, 8)}…</span>
-          )}
+        {/* QR 코드 */}
+        <div className="flex flex-col items-center gap-2 my-6">
+          <div className="bg-white p-3 rounded-2xl shadow-sm">
+            <QRCodeSVG value={verifyUrl} size={140} level="M" />
+          </div>
+          <p className="text-xs text-gray-400">이 QR코드를 스캔하면 단증을 검증할 수 있습니다</p>
         </div>
+
+        {/* 블록체인 상태 */}
+        {hasNft ? (
+          <div className="flex flex-col items-center gap-2">
+            <div className="flex items-center gap-2 py-2 px-4 rounded-full text-xs font-medium bg-emerald-100 text-emerald-700 w-fit">
+              <span>⛓</span>
+              <span>블록체인 등록 완료</span>
+            </div>
+            {polygonscanUrl && (
+              <a
+                href={polygonscanUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs text-blue-500 hover:underline flex items-center gap-1"
+              >
+                Polygonscan에서 확인 →
+              </a>
+            )}
+          </div>
+        ) : (
+          <div className="flex items-center justify-center gap-2 py-2 px-4 rounded-full text-xs font-medium bg-gray-100 text-gray-400 w-fit mx-auto">
+            <span>⏳</span>
+            <span>블록체인 등록 준비 중</span>
+          </div>
+        )}
 
         {/* 하단 */}
         <div className="mt-6 pt-4 border-t border-gray-200/60 text-center">
@@ -161,8 +190,10 @@ export default function VerifyPage() {
         </div>
       </div>
 
-      <div className="text-center mt-8">
-        <Link href="/" className="text-sm text-gray-400 hover:text-gray-600">
+      {/* 하단 브랜딩 */}
+      <div className="text-center mt-8 space-y-1">
+        <p className="text-sm font-semibold text-gray-600">태권도 플랫폼 (Taekwondo Platform)</p>
+        <Link href="/" className="text-xs text-gray-400 hover:text-gray-600">
           tkd.genomic.cc
         </Link>
       </div>

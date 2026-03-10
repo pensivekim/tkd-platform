@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { useParams, useRouter } from 'next/navigation'
+import { QRCodeSVG } from 'qrcode.react'
 import { captureException } from '@/lib/sentry'
 import { useI18n } from '@/lib/i18n'
 import type { Student } from '@/types/student'
@@ -107,6 +108,9 @@ export default function CertPage() {
                                     'text-gray-600'
 
   const hasNft = !!student.nft_token_id
+  const verifyUrl = student.cert_number
+    ? `https://tkd.genomic.cc/verify/${student.cert_number}`
+    : null
 
   return (
     <div>
@@ -190,6 +194,16 @@ export default function CertPage() {
             </div>
           )}
         </div>
+
+        {/* QR 코드 */}
+        {verifyUrl && (
+          <div className="flex flex-col items-center gap-2 my-6">
+            <div className="bg-white p-3 rounded-2xl shadow-sm">
+              <QRCodeSVG value={verifyUrl} size={160} level="M" />
+            </div>
+            <p className="text-xs text-gray-400">스캔하여 단증 검증</p>
+          </div>
+        )}
 
         {/* 블록체인 상태 */}
         <div className={`flex items-center justify-center gap-2 py-2 px-4 rounded-full text-xs font-medium w-fit mx-auto ${hasNft ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-400'}`}>
