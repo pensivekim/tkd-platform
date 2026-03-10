@@ -32,7 +32,7 @@ jobs:
       - name: Smoke test
         run: |
           sleep 15
-          STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://tkd.genomic.cc/api/health)
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://tkd-platform.pages.dev/api/health)
           echo "Health check status: $STATUS"
           if [ "$STATUS" != "200" ]; then
             echo "Health check failed: $STATUS"
