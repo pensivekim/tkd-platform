@@ -85,7 +85,9 @@ export async function POST(req: NextRequest, { params }: Params) {
       .run()
 
     const photo = await db.prepare('SELECT * FROM photos WHERE id = ?').bind(photoId).first()
-    return Response.json({ photo, url: r2Key }, { status: 201 })
+    const photosBase = process.env.NEXT_PUBLIC_PHOTOS_URL ?? ''
+    const url = photosBase ? `${photosBase}/${r2Key}` : r2Key
+    return Response.json({ photo, url }, { status: 201 })
   } catch (error) {
     captureException(error, { route: 'POST /api/albums/[id]/photos' })
     return Response.json({ error: '사진 업로드에 실패했습니다.' }, { status: 500 })
