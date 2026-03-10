@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server'
 import { authFromRequest } from '@/lib/auth'
 import { captureException } from '@/lib/sentry'
 import { nanoid } from 'nanoid'
+import { sendPushToDojang } from '@/lib/push'
 
 export interface PoomsaeResult {
   id:               string
@@ -42,6 +43,7 @@ export async function POST(req: NextRequest) {
       duration_seconds?: number
       mode?:            string
       dojang_id?:       string  // 비로그인 시 쿼리 또는 body로 전달
+      invite_token?:    string  // 초대 토큰 (학생 연결 + 푸시용)
     }
 
     if (!body.student_name?.trim())  return Response.json({ error: '학생 이름이 필요합니다.' }, { status: 400 })
@@ -86,6 +88,24 @@ export async function POST(req: NextRequest) {
         body.mode ?? 'practice',
       )
       .run()
+
+    // invite_token이 있으면 used_at 갱신 + 도장 푸시 알림
+    if (body.invite_token) {
+      try {
+        await db
+          .prepare('UPDATE poomsae_invites SET used_at = ? WHERE invite_token = ?')
+          .bind(new Date().toISOString(), body.invite_token)
+          .run()
+
+        await sendPushToDojang(db, dojanId, {
+          title: `🥋 ${body.student_name.trim()} 품새 연습 완료!`,
+          body:  `${body.poomsae_name} · ${Math.round(body.total_score)}점 — 확인해보세요`,
+          url:   'https://tkd.genomic.cc/dashboard/poomsae',
+        })
+      } catch (pushErr) {
+        captureException(pushErr, { action: 'poomsae_result_push', invite_token: body.invite_token })
+      }
+    }
 
     return Response.json({ id, total_score: body.total_score }, { status: 201 })
   } catch (error) {

@@ -57,6 +57,18 @@ export default function PoomsaeSessionPage({ params }: { params: Promise<{ pooms
   const pendingSaveRef = useRef<PoomsaeScoringResult | null>(null);
   const startTimeRef = useRef<number>(0);
 
+  // 초대 토큰
+  type InviteInfo = {
+    student_id:   string
+    student_name: string
+    poomsae_name: string
+    dojang_name:  string
+    message:      string | null
+    expired:      boolean
+  }
+  const [inviteInfo, setInviteInfo] = useState<InviteInfo | null>(null);
+  const [inviteError, setInviteError] = useState<string | null>(null);
+
   const videoRef = useRef<HTMLVideoElement>(null);
   const engineRef = useRef<PoomsaeScoringEngine | null>(null);
   const cleanupRef = useRef<(() => void) | null>(null);
@@ -100,6 +112,22 @@ export default function PoomsaeSessionPage({ params }: { params: Promise<{ pooms
     }
   }, []);
 
+  // 초대 토큰 처리
+  useEffect(() => {
+    const token = searchParams.get('token');
+    if (!token) return;
+    fetch(`/api/public/poomsae/invite/${token}`)
+      .then(r => r.json())
+      .then((data: InviteInfo & { error?: string }) => {
+        if (data.error) { setInviteError(data.error); return; }
+        if (data.expired) { setInviteError('이미 사용되었거나 만료된 초대 링크입니다.'); return; }
+        setInviteInfo(data);
+        setStudentName(data.student_name);
+      })
+      .catch(() => setInviteError('초대 정보를 불러오지 못했습니다.'));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // Start camera on mount for prep phase
   useEffect(() => {
     if (!poomsae) return;
@@ -125,20 +153,22 @@ export default function PoomsaeSessionPage({ params }: { params: Promise<{ pooms
   // 결과 저장 함수
   const saveResult = useCallback(async (result: PoomsaeScoringResult, name: string) => {
     if (!poomsae) return;
+    const token   = searchParams.get('token');
     const dojanId = searchParams.get('dojang_id');
     const duration = startTimeRef.current
       ? Math.round((Date.now() - startTimeRef.current) / 1000)
       : null;
     setSaveStatus('saving');
     try {
-      const url = dojanId
+      const urlStr = dojanId
         ? `/api/poomsae/result?dojang_id=${encodeURIComponent(dojanId)}`
         : '/api/poomsae/result';
-      const res = await fetch(url, {
+      const res = await fetch(urlStr, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           student_name:     name,
+          student_id:       inviteInfo?.student_id ?? undefined,
           poomsae_id:       poomsae.id,
           poomsae_name:     poomsae.nameKo,
           total_score:      result.total,
@@ -150,13 +180,14 @@ export default function PoomsaeSessionPage({ params }: { params: Promise<{ pooms
           duration_seconds: duration,
           mode:             'practice',
           dojang_id:        dojanId ?? undefined,
+          invite_token:     token ?? undefined,
         }),
       });
       setSaveStatus(res.ok ? 'saved' : 'error');
     } catch {
       setSaveStatus('error');
     }
-  }, [poomsae, searchParams]);
+  }, [poomsae, searchParams, inviteInfo]);
 
   const handleStart = () => {
     if (!poomsae) return;
@@ -181,12 +212,17 @@ export default function PoomsaeSessionPage({ params }: { params: Promise<{ pooms
           setPhase("result");
           // 이름 입력 모달 (저장용)
           pendingSaveRef.current = result;
-          const saved = typeof window !== 'undefined' ? localStorage.getItem('poomsae_student_name') : null;
-          if (saved) {
-            setStudentName(saved);
-            saveResult(result, saved);
+          // 초대 토큰으로 접근한 경우: 이름 모달 없이 바로 저장
+          if (inviteInfo) {
+            saveResult(result, inviteInfo.student_name);
           } else {
-            setShowNameModal(true);
+            const saved = typeof window !== 'undefined' ? localStorage.getItem('poomsae_student_name') : null;
+            if (saved) {
+              setStudentName(saved);
+              saveResult(result, saved);
+            } else {
+              setShowNameModal(true);
+            }
           }
         }
       });
@@ -231,6 +267,19 @@ export default function PoomsaeSessionPage({ params }: { params: Promise<{ pooms
     ? finalScore.total >= 80 ? "#4ade80" : finalScore.total >= 60 ? "#E9C46A" : "#E63946"
     : "#E9C46A";
 
+  // 초대 만료 오류 화면
+  if (inviteError) {
+    return (
+      <div style={{ background: "#0A0A0F", minHeight: "100vh", color: "#F0F0F5", display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}>
+        <div style={{ textAlign: "center", maxWidth: 360 }}>
+          <div style={{ fontSize: 40, marginBottom: 12 }}>⚠️</div>
+          <p style={{ fontWeight: 700, marginBottom: 8 }}>{inviteError}</p>
+          <Link href="/poomsae" style={{ color: "#E9C46A", textDecoration: "none", fontSize: 14 }}>← 품새 목록으로</Link>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div style={{ background: "#0A0A0F", minHeight: "100vh", fontFamily: "'Outfit',sans-serif", color: "#F0F0F5" }}>
       {/* Top bar */}
@@ -254,6 +303,23 @@ export default function PoomsaeSessionPage({ params }: { params: Promise<{ pooms
           ))}
         </div>
       </div>
+
+      {/* 초대 배너 */}
+      {inviteInfo && (
+        <div style={{
+          background: "rgba(233,196,106,0.1)", borderBottom: "1px solid rgba(233,196,106,0.25)",
+          padding: "10px 20px", fontSize: 13, color: "#E9C46A",
+          display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap",
+        }}>
+          <span>👋</span>
+          <span>
+            안녕하세요 <strong>{inviteInfo.student_name}</strong>님!{" "}
+            <strong>{inviteInfo.dojang_name}</strong> 사범님이{" "}
+            <strong>{inviteInfo.poomsae_name}</strong> 연습을 요청했어요.
+            {inviteInfo.message && <span style={{ color: "#B09050", marginLeft: 6 }}>"{inviteInfo.message}"</span>}
+          </span>
+        </div>
+      )}
 
       <div style={{ maxWidth: 960, margin: "0 auto", padding: 16 }}>
         {/* ── PREP PHASE ── */}

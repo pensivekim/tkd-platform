@@ -5,9 +5,11 @@ import { captureException } from '@/lib/sentry'
 import LoadingSpinner from '@/components/ui/LoadingSpinner'
 import EmptyState from '@/components/ui/EmptyState'
 import ErrorMessage from '@/components/ui/ErrorMessage'
+import { POOMSAE_LIST } from '@/lib/poomsae-data'
 import type { PoomsaeResult } from '@/app/api/poomsae/result/route'
 
 type SortKey = 'created_at' | 'total_score'
+type Student = { id: string; name: string; belt: string }
 
 const SCORE_COLOR = (s: number) =>
   s >= 80 ? 'text-green-600' : s >= 60 ? 'text-yellow-600' : 'text-red-500'
@@ -79,6 +81,167 @@ function DetailModal({ result, onClose }: { result: PoomsaeResult; onClose: () =
   )
 }
 
+// ── 연습 요청 모달 ─────────────────────────────────────────────
+function InviteModal({ onClose }: { onClose: () => void }) {
+  const [students,    setStudents]    = useState<Student[]>([])
+  const [studentId,   setStudentId]   = useState('')
+  const [poomsaeId,   setPoomsaeId]   = useState(POOMSAE_LIST[0].id)
+  const [message,     setMessage]     = useState('')
+  const [isLoading,   setIsLoading]   = useState(true)
+  const [isCreating,  setIsCreating]  = useState(false)
+  const [inviteUrl,   setInviteUrl]   = useState<string | null>(null)
+  const [copied,      setCopied]      = useState(false)
+
+  useEffect(() => {
+    fetch('/api/students?status=active&limit=200')
+      .then(r => r.json())
+      .then((d: { students?: Student[] }) => { setStudents(d.students ?? []); if (d.students?.[0]) setStudentId(d.students[0].id) })
+      .catch(() => {})
+      .finally(() => setIsLoading(false))
+  }, [])
+
+  async function handleCreate() {
+    if (!studentId || !poomsaeId) return
+    setIsCreating(true)
+    try {
+      const res  = await fetch('/api/poomsae/invite', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ student_id: studentId, poomsae_id: poomsaeId, message: message.trim() || undefined }),
+      })
+      const data = await res.json() as { invite_url?: string; error?: string }
+      if (!res.ok) { alert(data.error ?? '생성 실패'); return }
+      setInviteUrl(data.invite_url ?? null)
+    } catch {
+      alert('초대 링크 생성에 실패했습니다.')
+    } finally {
+      setIsCreating(false)
+    }
+  }
+
+  function handleCopy() {
+    if (!inviteUrl) return
+    navigator.clipboard.writeText(inviteUrl).catch(() => alert(`링크: ${inviteUrl}`))
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
+  }
+
+  return (
+    <div
+      className="fixed inset-0 bg-black/50 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
+      onClick={e => { if (e.target === e.currentTarget) onClose() }}
+    >
+      <div className="bg-white w-full sm:max-w-md rounded-t-2xl sm:rounded-2xl shadow-xl max-h-[90vh] overflow-y-auto">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 sticky top-0 bg-white">
+          <h2 className="font-bold text-gray-900">연습 요청 보내기</h2>
+          <button onClick={onClose} className="p-1.5 rounded-lg text-gray-400 hover:bg-gray-100 transition-colors" aria-label="닫기">
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        <div className="p-5 space-y-4">
+          {inviteUrl ? (
+            /* 링크 생성 완료 */
+            <div className="space-y-4">
+              <div className="text-center py-4">
+                <div className="text-4xl mb-2">🔗</div>
+                <p className="font-semibold text-gray-900">초대 링크가 생성되었습니다</p>
+                <p className="text-xs text-gray-400 mt-1">7일간 유효합니다</p>
+              </div>
+              <div className="flex gap-2">
+                <input
+                  readOnly
+                  value={inviteUrl}
+                  className="flex-1 px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-xs text-gray-600 min-w-0"
+                />
+                <button
+                  onClick={handleCopy}
+                  className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors flex-shrink-0 ${
+                    copied ? 'bg-green-600 text-white' : 'bg-red-600 text-white hover:bg-red-700'
+                  }`}
+                >
+                  {copied ? '✓ 복사됨' : '복사'}
+                </button>
+              </div>
+              <button
+                onClick={onClose}
+                className="w-full py-2.5 border border-gray-200 text-gray-600 text-sm rounded-lg hover:bg-gray-50 transition-colors"
+              >
+                닫기
+              </button>
+            </div>
+          ) : (
+            /* 입력 폼 */
+            <>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">학생 선택 <span className="text-red-500">*</span></label>
+                {isLoading ? (
+                  <div className="py-2 text-sm text-gray-400">로딩 중...</div>
+                ) : (
+                  <select
+                    value={studentId}
+                    onChange={e => setStudentId(e.target.value)}
+                    className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-red-500 bg-white"
+                  >
+                    {students.map(s => (
+                      <option key={s.id} value={s.id}>{s.name} ({s.belt})</option>
+                    ))}
+                  </select>
+                )}
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">품새 선택 <span className="text-red-500">*</span></label>
+                <select
+                  value={poomsaeId}
+                  onChange={e => setPoomsaeId(e.target.value)}
+                  className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-red-500 bg-white"
+                >
+                  {POOMSAE_LIST.map(p => (
+                    <option key={p.id} value={p.id}>{p.nameKo} ({p.level})</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">메시지 (선택)</label>
+                <input
+                  type="text"
+                  value={message}
+                  onChange={e => setMessage(e.target.value)}
+                  placeholder="예: 이번 심사 준비 파이팅!"
+                  maxLength={100}
+                  className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+                />
+              </div>
+
+              <div className="flex gap-3 pt-2">
+                <button
+                  onClick={onClose}
+                  className="flex-1 py-2.5 border border-gray-300 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-50 transition-colors"
+                >
+                  취소
+                </button>
+                <button
+                  onClick={handleCreate}
+                  disabled={!studentId || isCreating}
+                  className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-red-600 text-white text-sm font-semibold rounded-lg hover:bg-red-700 transition-colors disabled:opacity-60"
+                >
+                  {isCreating ? (
+                    <><span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />생성 중...</>
+                  ) : '🔗 링크 생성'}
+                </button>
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // ── 요약 카드 ───────────────────────────────────────────────────
 function StatCard({ label, value, sub }: { label: string; value: string | number; sub?: string }) {
   return (
@@ -100,6 +263,7 @@ export default function PoomsaeDashboard() {
   const [filterPoomsae, setFilterPoomsae] = useState('')
   const [selected,   setSelected]   = useState<PoomsaeResult | null>(null)
   const [total,      setTotal]      = useState(0)
+  const [showInvite, setShowInvite] = useState(false)
 
   const fetchResults = useCallback(async () => {
     setIsLoading(true)
@@ -153,7 +317,18 @@ export default function PoomsaeDashboard() {
     <div>
       <div className="flex items-center justify-between mb-5">
         <h1 className="text-xl font-bold text-gray-900">품새 기록</h1>
-        <span className="text-sm text-gray-400">총 {total}건</span>
+        <div className="flex items-center gap-3">
+          <span className="text-sm text-gray-400">총 {total}건</span>
+          <button
+            onClick={() => setShowInvite(true)}
+            className="flex items-center gap-1.5 px-4 py-2.5 bg-red-600 text-white text-sm font-semibold rounded-lg hover:bg-red-700 transition-colors"
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+            </svg>
+            연습 요청
+          </button>
+        </div>
       </div>
 
       {/* 요약 카드 */}
@@ -282,6 +457,9 @@ export default function PoomsaeDashboard() {
 
       {/* 상세 모달 */}
       {selected && <DetailModal result={selected} onClose={() => setSelected(null)} />}
+
+      {/* 연습 요청 모달 */}
+      {showInvite && <InviteModal onClose={() => setShowInvite(false)} />}
     </div>
   )
 }
