@@ -17,7 +17,7 @@ const FEATURES = [
     icon: '🔗',
     title: '블록체인 디지털 단증',
     badge: 'Polygon SBT',
-    desc: '온체인 발행, 위변조 불가. QR코드로 2초 안에 전세계 검증. 건당 $0.001 미만. 플랫폼 종료 후에도 영구 유효.',
+    desc: '온체인 발행, 위변조 불가. QR코드로 2초 안에 전세계 검증. 플랫폼 종료 후에도 영구 유효.',
   },
   {
     icon: '📸',
@@ -30,7 +30,7 @@ const FEATURES = [
 const TECH_STACK = [
   { label: 'AI 동작 분석', value: 'MediaPipe Pose', sub: '33 keypoints · 브라우저 실시간' },
   { label: '영상 통신', value: 'WebRTC SFU', sub: 'Cloudflare Realtime · <500ms' },
-  { label: '단증 발급', value: 'Polygon Blockchain', sub: 'SBT · 위변조 불가 · $0.001/건' },
+  { label: '단증 발급', value: 'Polygon Blockchain', sub: 'SBT · 위변조 불가 · 글로벌 검증' },
   { label: '인프라', value: 'Cloudflare Workers', sub: 'Edge · 330+ 글로벌 PoP' },
   { label: '얼굴 인식', value: 'Face AI', sub: '선수별 자동 분류 · 알림톡 전송' },
   { label: '데이터베이스', value: 'Cloudflare D1', sub: 'SQLite · Edge · 글로벌 복제' },
