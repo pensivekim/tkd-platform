@@ -17,11 +17,11 @@ export default function Header({ isLoggedIn, dojanName }: HeaderProps) {
     <header className="bg-white border-b border-gray-200 sticky top-0 z-50">
       <div className="max-w-5xl mx-auto px-4 h-14 flex items-center justify-between">
         {/* 로고 */}
-        <Link href="/" className="flex items-center gap-2 font-bold text-lg text-red-600">
+        <Link href="/" className="flex items-center gap-2">
           <span>🥋</span>
           <div className="flex flex-col leading-tight">
-            <span className="font-normal text-gray-400" style={{ fontSize: 10, letterSpacing: 1 }}>태권도 플랫폼</span>
-            <span>도장관</span>
+            <span className="font-bold text-lg text-red-600">태권도 플랫폼</span>
+            <span className="font-normal text-gray-400" style={{ fontSize: 11 }}>도장관(DOJANGWAN)</span>
           </div>
         </Link>
 

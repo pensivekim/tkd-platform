@@ -35,8 +35,8 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
       <div className="flex items-center gap-2 px-3 py-3 mb-4">
         <span className="text-xl">🥋</span>
         <div className="flex flex-col leading-tight">
-          <span className="font-normal text-gray-400" style={{ fontSize: 10, letterSpacing: 1 }}>태권도 플랫폼</span>
-          <span className="font-bold text-red-600 text-lg">도장관</span>
+          <span className="font-bold text-red-600 text-lg">태권도 플랫폼</span>
+          <span className="font-normal text-gray-400" style={{ fontSize: 11 }}>도장관(DOJANGWAN)</span>
         </div>
       </div>
 

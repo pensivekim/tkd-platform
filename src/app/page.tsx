@@ -50,9 +50,12 @@ export default function LandingPage() {
       {/* 네비게이션 */}
       <header className="sticky top-0 z-50 bg-white/90 backdrop-blur border-b border-gray-100">
         <div className="max-w-5xl mx-auto px-4 h-14 flex items-center justify-between">
-          <div className="flex flex-col leading-tight">
-            <span className="font-normal text-gray-400" style={{ fontSize: 10, letterSpacing: 1 }}>태권도 플랫폼</span>
-            <span className="font-bold text-lg text-red-600">🥋 도장관</span>
+          <div className="flex items-center gap-2">
+            <span>🥋</span>
+            <div className="flex flex-col leading-tight">
+              <span className="font-bold text-lg text-red-600">태권도 플랫폼</span>
+              <span className="font-normal text-gray-400" style={{ fontSize: 11 }}>도장관(DOJANGWAN)</span>
+            </div>
           </div>
           <div className="flex items-center gap-2">
             <Link
@@ -74,20 +77,17 @@ export default function LandingPage() {
       {/* Hero */}
       <section className="bg-gradient-to-b from-gray-900 to-gray-800 text-white">
         <div className="max-w-5xl mx-auto px-4 py-20 md:py-32 text-center">
-          <p className="text-red-400 text-sm font-semibold tracking-widest uppercase mb-4">
-            태권도 플랫폼(TKP) · 도장 SaaS
-          </p>
           <h1
             className="text-3xl md:text-5xl font-extrabold leading-tight mb-6"
             style={{ wordBreak: 'keep-all' }}
           >
-            도장관 — 태권도 도장의<br className="hidden md:block" /> 모든 것
+            태권도 플랫폼 —<br className="hidden md:block" /> 도장·단증·AI 품새·대회의 모든 것
           </h1>
           <p
             className="text-gray-300 text-lg md:text-xl mb-10 max-w-xl mx-auto"
             style={{ wordBreak: 'keep-all' }}
           >
-            원생 관리부터 AI 품새 채점까지
+            도장 SaaS부터 블록체인 단증, AI 품새 채점, 대회 라이브까지 — 세계 210개국 태권도를 하나의 플랫폼에서
           </p>
           <Link
             href="/register"
@@ -102,6 +102,7 @@ export default function LandingPage() {
 
       {/* 기능 소개 */}
       <section className="max-w-5xl mx-auto px-4 py-16 md:py-24">
+        <p className="text-center text-sm font-semibold text-red-600 tracking-widest uppercase mb-2">도장관(DOJANGWAN)</p>
         <h2
           className="text-2xl md:text-3xl font-bold text-center mb-12"
           style={{ wordBreak: 'keep-all' }}
@@ -191,7 +192,7 @@ export default function LandingPage() {
           className="text-gray-300 mb-8 max-w-md mx-auto"
           style={{ wordBreak: 'keep-all' }}
         >
-          태권도 플랫폼(TKP)의 도장 SaaS — 도장관으로 더 스마트하게 운영하세요.
+          태권도 종주국 한국의 글로벌 플랫폼. 지금 바로 무료로 시작하세요.
         </p>
         <Link
           href="/register"
