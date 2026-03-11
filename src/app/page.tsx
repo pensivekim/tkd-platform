@@ -75,7 +75,7 @@ export default function LandingPage() {
             MediaPipe · WebRTC · Polygon · Cloudflare Workers —<br className="hidden md:block" /> 세계 210개국 태권도를 하나의 기술 플랫폼에서
           </p>
           <a
-            href="mailto:contact@genomic.cc"
+            href="mailto:admin@genomic.cc"
             className="inline-flex items-center gap-2 px-8 py-3.5 bg-red-600 text-white text-base font-bold rounded-xl hover:bg-red-700 transition-colors shadow-lg shadow-red-900/30"
           >
             파트너십 문의
@@ -155,10 +155,10 @@ export default function LandingPage() {
           도장 체인, 협회, 기관 파트너를 모집합니다.
         </p>
         <a
-          href="mailto:contact@genomic.cc"
+          href="mailto:admin@genomic.cc"
           className="inline-flex items-center gap-2 px-8 py-3.5 bg-gray-900 text-white text-base font-bold rounded-xl hover:bg-gray-800 transition-colors"
         >
-          contact@genomic.cc
+          admin@genomic.cc
           <span aria-hidden="true">→</span>
         </a>
       </section>
@@ -168,8 +168,8 @@ export default function LandingPage() {
         <div className="max-w-5xl mx-auto px-4 py-8 flex flex-col sm:flex-row items-center justify-between gap-3 text-sm text-gray-500">
           <div className="flex flex-col items-center sm:items-start gap-1">
             <span className="font-semibold text-gray-700">주식회사 제노믹</span>
-            <a href="mailto:contact@genomic.cc" className="hover:text-red-600 transition-colors">
-              contact@genomic.cc
+            <a href="mailto:admin@genomic.cc" className="hover:text-red-600 transition-colors">
+              admin@genomic.cc
             </a>
           </div>
           <p className="text-xs text-gray-400">&copy; 2026 Genomic Inc. All rights reserved.</p>
