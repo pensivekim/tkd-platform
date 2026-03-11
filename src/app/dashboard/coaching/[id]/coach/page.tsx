@@ -203,7 +203,7 @@ export default function CoachSessionPage({ params }: Params) {
           <Link href="/dashboard/coaching" className="text-gray-400 hover:text-white text-sm transition-colors">
             ← 목록
           </Link>
-          <span className="text-yellow-400 font-bold tracking-wider text-sm">DOJANGWAN</span>
+          <span className="text-yellow-400 font-bold tracking-wider text-sm">TKP</span>
           <span className="text-gray-600">|</span>
           <span className="font-semibold text-sm truncate max-w-[160px] sm:max-w-xs">
             {session?.title ?? '로딩 중...'}

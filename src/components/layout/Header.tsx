@@ -19,7 +19,10 @@ export default function Header({ isLoggedIn, dojanName }: HeaderProps) {
         {/* 로고 */}
         <Link href="/" className="flex items-center gap-2 font-bold text-lg text-red-600">
           <span>🥋</span>
-          <span>도장관</span>
+          <div className="flex flex-col leading-tight">
+            <span className="font-normal text-gray-400" style={{ fontSize: 10, letterSpacing: 1 }}>태권도 플랫폼</span>
+            <span>도장관</span>
+          </div>
         </Link>
 
         {/* 데스크탑 우측 */}

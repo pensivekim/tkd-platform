@@ -4,8 +4,8 @@ import { I18nProvider } from "@/lib/i18n";
 import LangSync from "@/components/layout/LangSync";
 
 export const metadata: Metadata = {
-  title: "DOJANGWAN — 태권도 종주국 글로벌 플랫폼",
-  description: "국기원 공인 기준의 AI 품새 채점, 블록체인 디지털 단증, 원격 심사와 연수 — 세계 210개국 태권도를 하나의 플랫폼에서",
+  title: "태권도 플랫폼 | 도장관 — 글로벌 태권도 SaaS",
+  description: "태권도 종주국 한국의 글로벌 태권도 플랫폼. 도장 SaaS(도장관), AI 품새 채점, 국기원 단증, 원격 심사·연수, 대회 라이브 — 세계 210개국 하나의 플랫폼에서",
 };
 
 export default function RootLayout({

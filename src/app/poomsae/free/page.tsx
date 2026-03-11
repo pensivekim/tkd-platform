@@ -101,7 +101,7 @@ export default function FreePracticePage() {
       {/* Top bar */}
       <div style={{ borderBottom: "1px solid rgba(255,255,255,0.07)", padding: "10px 16px", display: "flex", alignItems: "center", gap: 10 }}>
         <Link href="/poomsae" style={{ color: "#E9C46A", textDecoration: "none", fontSize: 13 }}>← {t("poomsae.backToList")}</Link>
-        <span style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 18, letterSpacing: 2, color: "#E9C46A" }}>DOJANGWAN</span>
+        <span style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 18, letterSpacing: 2, color: "#E9C46A" }}>TKP</span>
         <span style={{ color: "#404050" }}>|</span>
         <span style={{ fontWeight: 700, fontSize: 14 }}>🥋 {t("poomsae.free")}</span>
       </div>

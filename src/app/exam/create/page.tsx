@@ -51,7 +51,7 @@ export default function ExamCreatePage() {
       <div style={{ borderBottom: "1px solid rgba(255,255,255,0.07)", padding: "16px 24px", display: "flex", alignItems: "center", gap: 16 }}>
         <Link href="/exam" style={{ color: "#E63946", textDecoration: "none", fontSize: 13 }}>← 목록</Link>
         <span style={{ color: "#404050" }}>|</span>
-        <span style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 18, letterSpacing: 2, color: "#E9C46A" }}>DOJANGWAN</span>
+        <span style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 18, letterSpacing: 2, color: "#E9C46A" }}>TKP</span>
         <span style={{ color: "#404050" }}>|</span>
         <span style={{ fontSize: 16, fontWeight: 700 }}>🥋 {t("exam.createSession")}</span>
       </div>

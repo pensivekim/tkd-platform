@@ -36,7 +36,7 @@ export default function TrainingPage() {
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           <Link href="/" style={{ color: "#E9C46A", textDecoration: "none", fontSize: 13 }}>{t("common.backToHome")}</Link>
           <span style={{ color: "#404050" }}>|</span>
-          <span style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 20, letterSpacing: 2, color: "#E9C46A" }}>DOJANGWAN</span>
+          <span style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 20, letterSpacing: 2, color: "#E9C46A" }}>TKP</span>
           <span style={{ color: "#404050" }}>|</span>
           <span style={{ fontSize: 16, fontWeight: 700 }}>🎓 {t("training.title")}</span>
         </div>

@@ -26,7 +26,10 @@ export default function DashboardShell({ children }: DashboardShellProps) {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
             </svg>
           </button>
-          <span className="font-bold text-red-600">🥋 도장관</span>
+          <div className="flex flex-col leading-none">
+            <span className="font-normal text-gray-400" style={{ fontSize: 9, letterSpacing: 1 }}>태권도 플랫폼</span>
+            <span className="font-bold text-red-600">🥋 도장관</span>
+          </div>
         </header>
 
         {/* 메인 컨텐츠 */}

@@ -123,7 +123,7 @@ export default function TraineePage({ params }: { params: Promise<{ sessionId: s
   if (phase === "join") {
     return (
       <div style={{ background: "#0A0A0F", minHeight: "100vh", fontFamily: "'Outfit',sans-serif", color: "#F0F0F5", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: 24 }}>
-        <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 22, letterSpacing: 3, color: "#E9C46A", marginBottom: 24 }}>DOJANGWAN</div>
+        <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 22, letterSpacing: 3, color: "#E9C46A", marginBottom: 24 }}>TKP</div>
         <div style={{ background: "#0E0E18", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 16, padding: 32, width: "100%", maxWidth: 400 }}>
           <h1 style={{ fontSize: 22, fontWeight: 700, marginBottom: 6 }}>🎓 {t("training.joinTraining")}</h1>
           {session && <p style={{ color: "#606070", fontSize: 14, marginBottom: 28 }}>{session.title} · {session.poomsae_type}</p>}
@@ -154,7 +154,7 @@ export default function TraineePage({ params }: { params: Promise<{ sessionId: s
       <audio ref={audioRef} autoPlay playsInline style={{ display: "none" }} />
       <div style={{ borderBottom: "1px solid rgba(255,255,255,0.07)", padding: "12px 20px", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 8 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <span style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 18, letterSpacing: 2, color: "#E9C46A" }}>DOJANGWAN</span>
+          <span style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 18, letterSpacing: 2, color: "#E9C46A" }}>TKP</span>
           <span style={{ color: "#404050" }}>|</span>
           <span style={{ fontWeight: 700, fontSize: 15 }}>🎓 {t("training.traineeView")}</span>
         </div>

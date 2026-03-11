@@ -50,7 +50,10 @@ export default function LandingPage() {
       {/* 네비게이션 */}
       <header className="sticky top-0 z-50 bg-white/90 backdrop-blur border-b border-gray-100">
         <div className="max-w-5xl mx-auto px-4 h-14 flex items-center justify-between">
-          <span className="font-bold text-lg text-red-600">🥋 도장관</span>
+          <div className="flex flex-col leading-tight">
+            <span className="font-normal text-gray-400" style={{ fontSize: 10, letterSpacing: 1 }}>태권도 플랫폼</span>
+            <span className="font-bold text-lg text-red-600">🥋 도장관</span>
+          </div>
           <div className="flex items-center gap-2">
             <Link
               href="/register"
@@ -72,7 +75,7 @@ export default function LandingPage() {
       <section className="bg-gradient-to-b from-gray-900 to-gray-800 text-white">
         <div className="max-w-5xl mx-auto px-4 py-20 md:py-32 text-center">
           <p className="text-red-400 text-sm font-semibold tracking-widest uppercase mb-4">
-            태권도 도장 전용 SaaS
+            태권도 플랫폼(TKP) · 도장 SaaS
           </p>
           <h1
             className="text-3xl md:text-5xl font-extrabold leading-tight mb-6"
@@ -188,7 +191,7 @@ export default function LandingPage() {
           className="text-gray-300 mb-8 max-w-md mx-auto"
           style={{ wordBreak: 'keep-all' }}
         >
-          국내외 수천 개 도장이 도장관으로 더 스마트하게 운영하고 있습니다.
+          태권도 플랫폼(TKP)의 도장 SaaS — 도장관으로 더 스마트하게 운영하세요.
         </p>
         <Link
           href="/register"

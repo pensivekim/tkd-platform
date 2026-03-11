@@ -59,7 +59,7 @@ function PreJoinScreen({
         {/* 헤더 */}
         <div className="text-center mb-6">
           <span className="text-3xl">🥋</span>
-          <h1 className="text-xl font-bold text-yellow-400 mt-2">도장관 라이브 코칭</h1>
+          <h1 className="text-xl font-bold text-yellow-400 mt-2">태권도 플랫폼 라이브 코칭</h1>
           <p className="text-sm text-gray-400 mt-1">{session.dojang_name}</p>
         </div>
 

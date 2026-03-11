@@ -64,7 +64,7 @@ export default function BroadcastPage({ params }: { params: Promise<{ eventId: s
       <div style={{ borderBottom: "1px solid rgba(255,255,255,0.07)", padding: "10px 16px", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 8 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <Link href="/arena" style={{ color: "#2A9D8F", textDecoration: "none", fontSize: 13 }}>← 목록</Link>
-          <span style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 18, letterSpacing: 2, color: "#E9C46A" }}>DOJANGWAN</span>
+          <span style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 18, letterSpacing: 2, color: "#E9C46A" }}>TKP</span>
           <span style={{ color: "#404050" }}>|</span>
           <span style={{ fontWeight: 700, fontSize: 14 }}>📡 {t("arena.broadcast")}</span>
         </div>

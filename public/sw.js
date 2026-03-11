@@ -1,4 +1,4 @@
-// 도장관 Service Worker — 웹 푸시 알림 처리
+// 태권도 플랫폼 Service Worker — 웹 푸시 알림 처리
 
 self.addEventListener('push', (event) => {
   if (!event.data) return
@@ -6,7 +6,7 @@ self.addEventListener('push', (event) => {
   try {
     data = event.data.json()
   } catch {
-    data = { title: '도장관', body: event.data.text(), url: '/' }
+    data = { title: '태권도 플랫폼', body: event.data.text(), url: '/' }
   }
 
   const options = {
@@ -18,7 +18,7 @@ self.addEventListener('push', (event) => {
   }
 
   event.waitUntil(
-    self.registration.showNotification(data.title ?? '도장관', options)
+    self.registration.showNotification(data.title ?? '태권도 플랫폼', options)
   )
 })
 

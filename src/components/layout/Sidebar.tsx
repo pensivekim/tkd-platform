@@ -34,7 +34,10 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
       {/* 로고 영역 */}
       <div className="flex items-center gap-2 px-3 py-3 mb-4">
         <span className="text-xl">🥋</span>
-        <span className="font-bold text-red-600 text-lg">도장관</span>
+        <div className="flex flex-col leading-tight">
+          <span className="font-normal text-gray-400" style={{ fontSize: 10, letterSpacing: 1 }}>태권도 플랫폼</span>
+          <span className="font-bold text-red-600 text-lg">도장관</span>
+        </div>
       </div>
 
       {NAV_KEYS.map((item) => (

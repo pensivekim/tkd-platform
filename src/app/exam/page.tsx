@@ -48,7 +48,7 @@ export default function ExamPage() {
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           <Link href="/" style={{ color: "#E63946", textDecoration: "none", fontSize: 13 }}>{t("common.backToHome")}</Link>
           <span style={{ color: "#404050" }}>|</span>
-          <span style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 18, letterSpacing: 2, color: "#E9C46A" }}>DOJANGWAN</span>
+          <span style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 18, letterSpacing: 2, color: "#E9C46A" }}>TKP</span>
           <span style={{ color: "#404050" }}>|</span>
           <span style={{ fontSize: 16, fontWeight: 700 }}>🥋 {t("exam.title")}</span>
         </div>

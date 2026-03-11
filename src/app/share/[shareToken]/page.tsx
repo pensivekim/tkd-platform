@@ -77,7 +77,7 @@ export default function ShareAlbumPage({ params }: Params) {
       <header className="bg-white border-b border-gray-100 shadow-sm">
         <div className="max-w-2xl mx-auto px-4 py-4 flex items-center gap-2">
           <span className="text-xl">🥋</span>
-          <span className="font-bold text-red-600">도장관</span>
+          <span className="font-bold text-red-600">태권도 플랫폼</span>
           <span className="text-gray-300 mx-1">|</span>
           <span className="text-sm text-gray-500">포토 앨범</span>
         </div>
@@ -176,7 +176,7 @@ export default function ShareAlbumPage({ params }: Params) {
 
       {/* 푸터 */}
       <footer className="text-center py-8 text-xs text-gray-300">
-        도장관 · tkd.genomic.cc
+        태권도 플랫폼(TKP) · tkd.genomic.cc
       </footer>
 
       {/* 라이트박스 */}

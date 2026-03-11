@@ -71,7 +71,7 @@ export default function PhotosPage({ params }: { params: Promise<{ eventId: stri
       <div style={{ borderBottom: "1px solid rgba(255,255,255,0.07)", padding: "12px 20px", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 8 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <Link href="/arena" style={{ color: "#E9C46A", textDecoration: "none", fontSize: 13 }}>← 목록</Link>
-          <span style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 18, letterSpacing: 2, color: "#E9C46A" }}>DOJANGWAN</span>
+          <span style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 18, letterSpacing: 2, color: "#E9C46A" }}>TKP</span>
           <span style={{ color: "#404050" }}>|</span>
           <span style={{ fontWeight: 700, fontSize: 14 }}>📸 {t("arena.photos")}</span>
         </div>
