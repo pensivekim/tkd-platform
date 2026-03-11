@@ -1,4 +1,5 @@
 import { NextRequest } from 'next/server'
+import { getDB } from '@/lib/db'
 import { z } from 'zod'
 import { hash } from 'bcryptjs'
 import { SignJWT } from 'jose'
@@ -20,8 +21,7 @@ export async function POST(req: NextRequest) {
     const jwtSecret = process.env.JWT_SECRET
     if (!jwtSecret) throw new Error('JWT_SECRET is not configured')
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const db = (process as any).env?.DB as any
+    const db = await getDB()
     if (!db) {
       return Response.json(
         { error: '데이터베이스에 연결할 수 없습니다. wrangler dev로 실행해주세요.' },

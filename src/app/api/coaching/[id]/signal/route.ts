@@ -1,4 +1,5 @@
 import { NextRequest } from 'next/server'
+import { getDB } from '@/lib/db'
 import { nanoid } from 'nanoid'
 import { captureException } from '@/lib/sentry'
 
@@ -9,8 +10,7 @@ export async function POST(req: NextRequest, { params }: Params) {
   try {
     const { id: sessionId } = await params
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const db = (process as any).env?.DB as any
+    const db = await getDB()
     if (!db) return Response.json({ error: 'DB를 사용할 수 없습니다.' }, { status: 503 })
 
     const body = await req.json() as {
@@ -48,8 +48,7 @@ export async function GET(req: NextRequest, { params }: Params) {
     const peerId = new URL(req.url).searchParams.get('peer_id')
     if (!peerId) return Response.json({ error: 'peer_id가 필요합니다.' }, { status: 400 })
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const db = (process as any).env?.DB as any
+    const db = await getDB()
     if (!db) return Response.json({ error: 'DB를 사용할 수 없습니다.' }, { status: 503 })
 
     const { results } = await db

@@ -1,4 +1,5 @@
 import { NextRequest } from 'next/server'
+import { getDB } from '@/lib/db'
 import { captureException } from '@/lib/sentry'
 
 type Params = { params: Promise<{ certNumber: string }> }
@@ -7,8 +8,7 @@ type Params = { params: Promise<{ certNumber: string }> }
 export async function GET(_req: NextRequest, { params }: Params) {
   try {
     const { certNumber } = await params
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const db = (process as any).env?.DB as any
+    const db = await getDB()
     if (!db) return Response.json({ error: 'DB를 사용할 수 없습니다.' }, { status: 503 })
 
     const student = await db

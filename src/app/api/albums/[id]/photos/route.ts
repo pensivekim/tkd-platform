@@ -1,4 +1,5 @@
 import { NextRequest } from 'next/server'
+import { getDB, getR2 } from '@/lib/db'
 import { nanoid } from 'nanoid'
 import { authFromRequest } from '@/lib/auth'
 import { captureException } from '@/lib/sentry'
@@ -12,8 +13,7 @@ export async function GET(_req: NextRequest, { params }: Params) {
     const payload = await authFromRequest()
     if (!payload) return Response.json({ error: '인증이 필요합니다.' }, { status: 401 })
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const db = (process as any).env?.DB as any
+    const db = await getDB()
     if (!db) return Response.json({ error: 'DB를 사용할 수 없습니다.' }, { status: 503 })
 
     const album = await db
@@ -42,12 +42,9 @@ export async function POST(req: NextRequest, { params }: Params) {
     if (!payload)         return Response.json({ error: '인증이 필요합니다.' }, { status: 401 })
     if (!payload.dojanId) return Response.json({ error: '도장 정보가 없습니다.' }, { status: 403 })
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const db = (process as any).env?.DB as any
+    const db = await getDB()
     if (!db) return Response.json({ error: 'DB를 사용할 수 없습니다.' }, { status: 503 })
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const r2 = (process as any).env?.PHOTOS as any
+    const r2 = await getR2()
     if (!r2) return Response.json({ error: 'R2를 사용할 수 없습니다.' }, { status: 503 })
 
     const album = await db

@@ -1,4 +1,5 @@
 import { NextRequest } from 'next/server'
+import { getDB } from '@/lib/db'
 import { authFromRequest } from '@/lib/auth'
 import { captureException } from '@/lib/sentry'
 import { nanoid } from 'nanoid'
@@ -25,8 +26,7 @@ export interface PoomsaeResult {
 // POST /api/poomsae/result — 채점 결과 저장 (인증 선택적)
 export async function POST(req: NextRequest) {
   try {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const db = (process as any).env?.DB as any
+    const db = await getDB()
     if (!db) return Response.json({ error: 'DB를 사용할 수 없습니다.' }, { status: 503 })
 
     const body = await req.json() as {
@@ -121,8 +121,7 @@ export async function GET(req: NextRequest) {
     if (!payload)         return Response.json({ error: '인증이 필요합니다.' }, { status: 401 })
     if (!payload.dojanId) return Response.json({ error: '도장 정보가 없습니다.' }, { status: 403 })
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const db = (process as any).env?.DB as any
+    const db = await getDB()
     if (!db) return Response.json({ error: 'DB를 사용할 수 없습니다.' }, { status: 503 })
 
     const url        = new URL(req.url)

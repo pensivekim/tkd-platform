@@ -1,4 +1,18 @@
-// TODO: D1 쿼리 헬퍼 (Phase 2 원생 관리 구현 시 작성)
-// Cloudflare D1 바인딩은 wrangler.toml의 DB 바인딩으로 접근
-// 사용 예: const { results } = await env.DB.prepare('SELECT * FROM students WHERE dojang_id = ?').bind(doJangId).all()
-export {}
+import { getCloudflareContext } from '@opennextjs/cloudflare'
+
+export async function getDB(): Promise<any> {
+  const ctx = await getCloudflareContext({ async: true })
+  const db = (ctx.env as any).DB
+  if (!db) throw new Error('D1 DB binding not found')
+  return db
+}
+
+export async function getR2(): Promise<any> {
+  const ctx = await getCloudflareContext({ async: true })
+  return (ctx.env as any).PHOTOS
+}
+
+export async function getAI(): Promise<any> {
+  const ctx = await getCloudflareContext({ async: true })
+  return (ctx.env as any).AI
+}

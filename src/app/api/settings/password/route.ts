@@ -1,4 +1,5 @@
 import { NextRequest } from 'next/server'
+import { getDB } from '@/lib/db'
 import { z } from 'zod'
 import bcrypt from 'bcryptjs'
 import { authFromRequest } from '@/lib/auth'
@@ -15,8 +16,7 @@ export async function PATCH(req: NextRequest) {
     const payload = await authFromRequest()
     if (!payload) return Response.json({ error: '인증이 필요합니다.' }, { status: 401 })
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const db = (process as any).env?.DB as any
+    const db = await getDB()
     if (!db) return Response.json({ error: 'DB를 사용할 수 없습니다.' }, { status: 503 })
 
     const body = await req.json()

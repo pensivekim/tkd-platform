@@ -1,4 +1,5 @@
 import { NextRequest } from 'next/server'
+import { getDB } from '@/lib/db'
 import { authFromRequest } from '@/lib/auth'
 import { captureException } from '@/lib/sentry'
 
@@ -12,8 +13,7 @@ export async function GET(_req: NextRequest, { params }: Params) {
     if (!payload)         return Response.json({ error: '인증이 필요합니다.' }, { status: 401 })
     if (!payload.dojanId) return Response.json({ error: '도장 정보가 없습니다.' }, { status: 403 })
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const db = (process as any).env?.DB as any
+    const db = await getDB()
     if (!db) return Response.json({ error: 'DB를 사용할 수 없습니다.' }, { status: 503 })
 
     const session = await db
@@ -56,8 +56,7 @@ export async function PATCH(req: NextRequest, { params }: Params) {
     if (!payload)         return Response.json({ error: '인증이 필요합니다.' }, { status: 401 })
     if (!payload.dojanId) return Response.json({ error: '도장 정보가 없습니다.' }, { status: 403 })
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const db = (process as any).env?.DB as any
+    const db = await getDB()
     if (!db) return Response.json({ error: 'DB를 사용할 수 없습니다.' }, { status: 503 })
 
     const session = await db
@@ -106,8 +105,7 @@ export async function DELETE(_req: NextRequest, { params }: Params) {
     if (!payload)         return Response.json({ error: '인증이 필요합니다.' }, { status: 401 })
     if (!payload.dojanId) return Response.json({ error: '도장 정보가 없습니다.' }, { status: 403 })
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const db = (process as any).env?.DB as any
+    const db = await getDB()
     if (!db) return Response.json({ error: 'DB를 사용할 수 없습니다.' }, { status: 503 })
 
     const session = await db

@@ -1,4 +1,5 @@
 import { NextRequest } from 'next/server'
+import { getDB } from '@/lib/db'
 import { captureException } from '@/lib/sentry'
 
 type Params = { params: Promise<{ id: string; peerId: string }> }
@@ -8,8 +9,7 @@ export async function DELETE(_req: NextRequest, { params }: Params) {
   try {
     const { id: sessionId, peerId } = await params
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const db = (process as any).env?.DB as any
+    const db = await getDB()
     if (!db) return Response.json({ error: 'DB를 사용할 수 없습니다.' }, { status: 503 })
 
     const now = new Date().toISOString()

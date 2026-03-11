@@ -1,4 +1,5 @@
 import { NextRequest } from 'next/server'
+import { getDB } from '@/lib/db'
 import { authFromRequest } from '@/lib/auth'
 import { captureException } from '@/lib/sentry'
 import { nanoid } from 'nanoid'
@@ -9,8 +10,7 @@ export async function POST(req: NextRequest) {
     const payload = await authFromRequest()
     if (!payload) return Response.json({ error: '인증이 필요합니다.' }, { status: 401 })
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const db = (process as any).env?.DB as any
+    const db = await getDB()
     if (!db) return Response.json({ error: 'DB를 사용할 수 없습니다.' }, { status: 503 })
 
     const body = await req.json() as {
@@ -52,8 +52,7 @@ export async function DELETE(req: NextRequest) {
     const body = await req.json() as { endpoint: string }
     if (!body.endpoint) return Response.json({ error: 'endpoint가 필요합니다.' }, { status: 400 })
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const db = (process as any).env?.DB as any
+    const db = await getDB()
     if (!db) return Response.json({ error: 'DB를 사용할 수 없습니다.' }, { status: 503 })
 
     await db.prepare('DELETE FROM push_subscriptions WHERE endpoint = ?').bind(body.endpoint).run()

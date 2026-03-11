@@ -1,4 +1,5 @@
 import { NextRequest } from 'next/server'
+import { getDB } from '@/lib/db'
 import { compare } from 'bcryptjs'
 import { SignJWT } from 'jose'
 import { captureException } from '@/lib/sentry'
@@ -18,8 +19,7 @@ export async function POST(req: NextRequest) {
 
     // D1 바인딩은 Cloudflare 런타임에서만 가능
     // 로컬 개발 시 wrangler dev로 실행해야 env.DB 사용 가능
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const db = (process as any).env?.DB as any
+    const db = await getDB()
     if (!db) {
       return Response.json(
         { error: '데이터베이스에 연결할 수 없습니다. wrangler dev로 실행해주세요.' },

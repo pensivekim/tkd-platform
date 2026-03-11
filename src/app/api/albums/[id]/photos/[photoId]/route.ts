@@ -1,4 +1,5 @@
 import { NextRequest } from 'next/server'
+import { getDB, getR2 } from '@/lib/db'
 import { authFromRequest } from '@/lib/auth'
 import { captureException } from '@/lib/sentry'
 
@@ -11,8 +12,7 @@ export async function PATCH(req: NextRequest, { params }: Params) {
     const payload = await authFromRequest()
     if (!payload) return Response.json({ error: '인증이 필요합니다.' }, { status: 401 })
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const db = (process as any).env?.DB as any
+    const db = await getDB()
     if (!db) return Response.json({ error: 'DB를 사용할 수 없습니다.' }, { status: 503 })
 
     const photo = await db
@@ -56,8 +56,7 @@ export async function DELETE(_req: NextRequest, { params }: Params) {
     const payload = await authFromRequest()
     if (!payload) return Response.json({ error: '인증이 필요합니다.' }, { status: 401 })
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const db = (process as any).env?.DB as any
+    const db = await getDB()
     if (!db) return Response.json({ error: 'DB를 사용할 수 없습니다.' }, { status: 503 })
 
     const photo = await db
@@ -67,8 +66,7 @@ export async function DELETE(_req: NextRequest, { params }: Params) {
     if (!photo) return Response.json({ error: '사진을 찾을 수 없습니다.' }, { status: 404 })
 
     // R2에서 파일 삭제
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const r2 = (process as any).env?.PHOTOS as any
+    const r2 = await getR2()
     if (r2) {
       await r2.delete(photo.r2_key).catch(() => null)
     }

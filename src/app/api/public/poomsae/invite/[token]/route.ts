@@ -1,4 +1,5 @@
 import { NextRequest } from 'next/server'
+import { getDB } from '@/lib/db'
 import { captureException } from '@/lib/sentry'
 import { POOMSAE_LIST } from '@/lib/poomsae-data'
 
@@ -19,8 +20,7 @@ export async function GET(_req: NextRequest, { params }: Params) {
   try {
     const { token } = await params
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const db = (process as any).env?.DB as any
+    const db = await getDB()
     if (!db) return Response.json({ error: 'DB를 사용할 수 없습니다.' }, { status: 503 })
 
     const row = await db
