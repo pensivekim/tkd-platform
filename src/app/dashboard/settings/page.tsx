@@ -3,6 +3,7 @@
 import { useState, useEffect, FormEvent } from 'react'
 import { z } from 'zod'
 import { captureException } from '@/lib/sentry'
+import { useI18n } from '@/lib/i18n'
 import { REGION_LIST } from '@/lib/constants'
 import LoadingSpinner from '@/components/ui/LoadingSpinner'
 import ErrorMessage from '@/components/ui/ErrorMessage'
@@ -17,8 +18,8 @@ interface UserInfo { name: string; email: string }
 
 // ─── Zod 스키마 ──────────────────────────────────────────────────────────────
 const DojangSchema = z.object({
-  name:        z.string().min(1, '도장명을 입력해주세요.').max(50),
-  owner_name:  z.string().min(1, '관장명을 입력해주세요.').max(30),
+  name:        z.string().min(1).max(50),
+  owner_name:  z.string().min(1).max(30),
   phone:       z.string().max(20).optional(),
   address:     z.string().max(200).optional(),
   region:      z.string().max(20).optional(),
@@ -27,20 +28,12 @@ const DojangSchema = z.object({
 })
 
 const PasswordSchema = z.object({
-  current_password: z.string().min(1, '현재 비밀번호를 입력해주세요.'),
-  new_password:     z.string().min(6, '새 비밀번호는 6자 이상이어야 합니다.'),
+  current_password: z.string().min(1),
+  new_password:     z.string().min(6),
   confirm_password: z.string(),
 }).refine((d) => d.new_password === d.confirm_password, {
-  message: '새 비밀번호가 일치하지 않습니다.',
   path: ['confirm_password'],
 })
-
-// ─── 요금제 정보 ─────────────────────────────────────────────────────────────
-const PLAN_INFO = {
-  free:  { label: '무료', color: 'bg-gray-100 text-gray-700',   features: ['원생 최대 30명', '출석 기록', '공지사항 5건'] },
-  basic: { label: '기본', color: 'bg-blue-100 text-blue-700',   features: ['원생 최대 100명', '출석 기록', '공지사항 무제한', '문자 알림'] },
-  pro:   { label: '프로', color: 'bg-red-100 text-red-700',     features: ['원생 무제한', '출석 기록', '공지사항 무제한', '문자 알림', 'AI 품새 채점', '온라인 연수'] },
-}
 
 // ─── 섹션 래퍼 ───────────────────────────────────────────────────────────────
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
@@ -67,6 +60,7 @@ const inputCls = 'w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm f
 
 // ─── 메인 페이지 ─────────────────────────────────────────────────────────────
 export default function SettingsPage() {
+  const { t } = useI18n()
   const [dojang, setDojang]       = useState<DojangInfo | null>(null)
   const [user, setUser]           = useState<UserInfo | null>(null)
   const [isLoading, setIsLoading] = useState(true)
@@ -84,13 +78,32 @@ export default function SettingsPage() {
   const [pwSaving, setPwSaving] = useState(false)
   const [pwMsg, setPwMsg]       = useState('')
 
+  // 요금제 정보 (번역)
+  const PLAN_INFO = {
+    free:  {
+      label: t('settings.plan.free'),
+      color: 'bg-gray-100 text-gray-700',
+      features: [t('settings.plan.free') + ' · 30명', t('dash.attendance'), t('dash.notices') + ' 5'],
+    },
+    basic: {
+      label: t('settings.plan.basic'),
+      color: 'bg-blue-100 text-blue-700',
+      features: ['100' + t('dash.students'), t('dash.attendance'), t('dash.notices'), 'SMS'],
+    },
+    pro: {
+      label: t('settings.plan.pro'),
+      color: 'bg-red-100 text-red-700',
+      features: [t('dash.students'), t('dash.attendance'), t('dash.notices'), 'SMS', t('dash.nav.poomsaeAdmin'), t('training.title')],
+    },
+  }
+
   async function loadSettings() {
     setIsLoading(true)
     setLoadError(null)
     try {
       const res  = await fetch('/api/settings/dojang')
       const data = await res.json()
-      if (!res.ok) throw new Error(data.error ?? '불러오기 실패')
+      if (!res.ok) throw new Error(data.error ?? t('common.error'))
       setDojang(data.dojang)
       setUser(data.user)
       setDojangForm({
@@ -104,7 +117,7 @@ export default function SettingsPage() {
       })
     } catch (err) {
       captureException(err, { action: 'load_settings' })
-      setLoadError('설정 정보를 불러오지 못했습니다.')
+      setLoadError(t('common.error'))
     } finally {
       setIsLoading(false)
     }
@@ -135,12 +148,12 @@ export default function SettingsPage() {
         body: JSON.stringify(parsed.data),
       })
       const data = await res.json()
-      if (!res.ok) { setDojangMsg(data.error ?? '저장에 실패했습니다.'); return }
+      if (!res.ok) { setDojangMsg(data.error ?? t('settings.saveFail')); return }
       setDojang(data.dojang)
-      setDojangMsg('✓ 저장되었습니다.')
+      setDojangMsg(t('settings.saved'))
     } catch (err) {
       captureException(err, { action: 'save_dojang_settings' })
-      setDojangMsg('서버 오류가 발생했습니다.')
+      setDojangMsg(t('settings.serverError'))
     } finally {
       setDojangSaving(false)
     }
@@ -173,12 +186,12 @@ export default function SettingsPage() {
         }),
       })
       const data = await res.json()
-      if (!res.ok) { setPwMsg(data.error ?? '변경에 실패했습니다.'); return }
+      if (!res.ok) { setPwMsg(data.error ?? t('settings.saveFail')); return }
       setPwForm({ current_password: '', new_password: '', confirm_password: '' })
-      setPwMsg('✓ 비밀번호가 변경되었습니다.')
+      setPwMsg(t('settings.saved'))
     } catch (err) {
       captureException(err, { action: 'change_password' })
-      setPwMsg('서버 오류가 발생했습니다.')
+      setPwMsg(t('settings.serverError'))
     } finally {
       setPwSaving(false)
     }
@@ -193,7 +206,7 @@ export default function SettingsPage() {
 
   if (loadError) return (
     <div>
-      <h1 className="text-xl font-bold text-gray-900 mb-6">설정</h1>
+      <h1 className="text-xl font-bold text-gray-900 mb-6">{t('dash.nav.settings')}</h1>
       <ErrorMessage message={loadError} retry={loadSettings} />
     </div>
   )
@@ -203,84 +216,78 @@ export default function SettingsPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-xl font-bold text-gray-900">설정</h1>
+      <h1 className="text-xl font-bold text-gray-900">{t('dash.nav.settings')}</h1>
 
       {/* ── 섹션 1: 도장 기본 정보 ── */}
-      <Section title="도장 기본 정보">
+      <Section title={t('settings.dojangInfo')}>
         <form onSubmit={handleDojangSave} className="space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <Field label="도장명 *" error={dojangErrors.name}>
+            <Field label={`${t('settings.dojangName')} *`} error={dojangErrors.name}>
               <input
                 type="text"
                 value={dojangForm.name}
                 onChange={(e) => setDojangForm((p) => ({ ...p, name: e.target.value }))}
-                placeholder="예: 강남태권도도장"
                 disabled={dojangSaving}
                 className={inputCls}
               />
             </Field>
-            <Field label="관장명 *" error={dojangErrors.owner_name}>
+            <Field label={`${t('settings.ownerName')} *`} error={dojangErrors.owner_name}>
               <input
                 type="text"
                 value={dojangForm.owner_name}
                 onChange={(e) => setDojangForm((p) => ({ ...p, owner_name: e.target.value }))}
-                placeholder="예: 홍길동"
                 disabled={dojangSaving}
                 className={inputCls}
               />
             </Field>
-            <Field label="전화번호" error={dojangErrors.phone}>
+            <Field label={t('settings.phone')} error={dojangErrors.phone}>
               <input
                 type="tel"
                 value={dojangForm.phone}
                 onChange={(e) => setDojangForm((p) => ({ ...p, phone: e.target.value }))}
-                placeholder="예: 02-1234-5678"
                 disabled={dojangSaving}
                 className={inputCls}
               />
             </Field>
-            <Field label="지역" error={dojangErrors.region}>
+            <Field label={t('settings.region')} error={dojangErrors.region}>
               <select
                 value={dojangForm.region}
                 onChange={(e) => setDojangForm((p) => ({ ...p, region: e.target.value }))}
                 disabled={dojangSaving}
                 className={inputCls}
               >
-                <option value="">선택하세요</option>
+                <option value="">{t('auth.selectRegion')}</option>
                 {REGION_LIST.map((r) => (
                   <option key={r} value={r}>{r}</option>
                 ))}
               </select>
             </Field>
-            <Field label="시/군/구" error={dojangErrors.city}>
+            <Field label={t('settings.cityDistrict')} error={dojangErrors.city}>
               <input
                 type="text"
                 value={dojangForm.city}
                 onChange={(e) => setDojangForm((p) => ({ ...p, city: e.target.value }))}
-                placeholder="예: 강남구"
                 disabled={dojangSaving}
                 className={inputCls}
               />
             </Field>
           </div>
 
-          <Field label="주소" error={dojangErrors.address}>
+          <Field label={t('settings.address')} error={dojangErrors.address}>
             <input
               type="text"
               value={dojangForm.address}
               onChange={(e) => setDojangForm((p) => ({ ...p, address: e.target.value }))}
-              placeholder="예: 서울특별시 강남구 테헤란로 123"
               disabled={dojangSaving}
               className={inputCls}
             />
           </Field>
 
-          <Field label="도장 소개" error={dojangErrors.description}>
+          <Field label={t('settings.dojangDesc')} error={dojangErrors.description}>
             <textarea
               value={dojangForm.description}
               onChange={(e) => setDojangForm((p) => ({ ...p, description: e.target.value }))}
               rows={3}
-              placeholder="도장을 간단히 소개해주세요."
               disabled={dojangSaving}
               className={`${inputCls} resize-none`}
             />
@@ -299,58 +306,55 @@ export default function SettingsPage() {
               className="flex items-center gap-2 px-5 py-2.5 bg-red-600 text-white text-sm font-semibold rounded-lg hover:bg-red-700 transition-colors disabled:opacity-60"
             >
               {dojangSaving && <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />}
-              저장
+              {t('settings.save')}
             </button>
           </div>
         </form>
       </Section>
 
       {/* ── 섹션 2: 계정 정보 ── */}
-      <Section title="계정 정보">
+      <Section title={t('settings.accountInfo')}>
         {/* 읽기 전용 계정 정보 */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6 pb-6 border-b border-gray-100">
           <div>
-            <p className="text-xs text-gray-500 mb-1">이름</p>
+            <p className="text-xs text-gray-500 mb-1">{t('settings.name')}</p>
             <p className="text-sm font-medium text-gray-900">{user?.name ?? '-'}</p>
           </div>
           <div>
-            <p className="text-xs text-gray-500 mb-1">이메일</p>
+            <p className="text-xs text-gray-500 mb-1">{t('settings.email')}</p>
             <p className="text-sm font-medium text-gray-900">{user?.email ?? '-'}</p>
           </div>
         </div>
 
         {/* 비밀번호 변경 */}
-        <p className="text-sm font-semibold text-gray-700 mb-3">비밀번호 변경</p>
+        <p className="text-sm font-semibold text-gray-700 mb-3">{t('settings.changePassword')}</p>
         <form onSubmit={handlePasswordChange} className="space-y-4">
-          <Field label="현재 비밀번호" error={pwErrors.current_password}>
+          <Field label={t('settings.currentPassword')} error={pwErrors.current_password}>
             <input
               type="password"
               value={pwForm.current_password}
               onChange={(e) => setPwForm((p) => ({ ...p, current_password: e.target.value }))}
-              placeholder="현재 비밀번호 입력"
               disabled={pwSaving}
               className={inputCls}
               autoComplete="current-password"
             />
           </Field>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <Field label="새 비밀번호" error={pwErrors.new_password}>
+            <Field label={t('settings.newPassword')} error={pwErrors.new_password}>
               <input
                 type="password"
                 value={pwForm.new_password}
                 onChange={(e) => setPwForm((p) => ({ ...p, new_password: e.target.value }))}
-                placeholder="6자 이상"
                 disabled={pwSaving}
                 className={inputCls}
                 autoComplete="new-password"
               />
             </Field>
-            <Field label="새 비밀번호 확인" error={pwErrors.confirm_password}>
+            <Field label={t('settings.confirmNewPassword')} error={pwErrors.confirm_password}>
               <input
                 type="password"
                 value={pwForm.confirm_password}
                 onChange={(e) => setPwForm((p) => ({ ...p, confirm_password: e.target.value }))}
-                placeholder="새 비밀번호 재입력"
                 disabled={pwSaving}
                 className={inputCls}
                 autoComplete="new-password"
@@ -371,20 +375,20 @@ export default function SettingsPage() {
               className="flex items-center gap-2 px-5 py-2.5 bg-gray-800 text-white text-sm font-semibold rounded-lg hover:bg-gray-900 transition-colors disabled:opacity-60"
             >
               {pwSaving && <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />}
-              비밀번호 변경
+              {t('settings.changePassword')}
             </button>
           </div>
         </form>
       </Section>
 
       {/* ── 섹션 3: 요금제 안내 ── */}
-      <Section title="요금제">
+      <Section title={t('settings.planInfo')}>
         {/* 현재 플랜 배지 */}
         <div className="flex items-center gap-3 mb-5">
           <span className={`px-3 py-1 rounded-full text-sm font-semibold ${planInfo.color}`}>
-            {planInfo.label} 플랜
+            {planInfo.label}
           </span>
-          <span className="text-sm text-gray-500">현재 이용 중</span>
+          <span className="text-sm text-gray-500">{t('settings.inUse')}</span>
         </div>
 
         {/* 플랜 비교 카드 */}
@@ -396,10 +400,10 @@ export default function SettingsPage() {
             >
               <div className="flex items-center justify-between mb-3">
                 <span className={`text-sm font-bold ${plan === key ? 'text-red-700' : 'text-gray-700'}`}>
-                  {info.label} 플랜
+                  {info.label}
                 </span>
                 {plan === key && (
-                  <span className="text-xs px-2 py-0.5 bg-red-600 text-white rounded-full">현재</span>
+                  <span className="text-xs px-2 py-0.5 bg-red-600 text-white rounded-full">{t('settings.currentBadge')}</span>
                 )}
               </div>
               <ul className="space-y-1">
@@ -415,10 +419,10 @@ export default function SettingsPage() {
 
         {plan !== 'pro' && (
           <a
-            href="mailto:contact@genomic.cc?subject=도장관 요금제 업그레이드 문의"
+            href="mailto:admin@genomic.cc?subject=Taekwondo Platform upgrade inquiry"
             className="inline-flex items-center gap-2 px-5 py-2.5 bg-red-600 text-white text-sm font-semibold rounded-lg hover:bg-red-700 transition-colors"
           >
-            업그레이드 문의
+            {t('settings.upgradeInquiry')}
           </a>
         )}
       </Section>

@@ -5,6 +5,7 @@ import { captureException } from '@/lib/sentry'
 import LoadingSpinner from '@/components/ui/LoadingSpinner'
 import EmptyState from '@/components/ui/EmptyState'
 import ErrorMessage from '@/components/ui/ErrorMessage'
+import { useI18n } from '@/lib/i18n'
 import { POOMSAE_LIST } from '@/lib/poomsae-data'
 import type { PoomsaeResult } from '@/app/api/poomsae/result/route'
 
@@ -19,12 +20,13 @@ const SCORE_BG = (s: number) =>
 
 // ── 5항목 바 차트 모달 ────────────────────────────────────────
 function DetailModal({ result, onClose }: { result: PoomsaeResult; onClose: () => void }) {
+  const { t } = useI18n()
   const items = [
-    { label: '정확도', value: result.accuracy ?? 0,    color: 'bg-red-500' },
-    { label: '대칭도', value: result.symmetry ?? 0,    color: 'bg-yellow-500' },
-    { label: '안정성', value: result.stability ?? 0,   color: 'bg-sky-400' },
-    { label: '타이밍', value: result.timing ?? 0,      color: 'bg-green-500' },
-    { label: '완성도', value: result.completeness ?? 0, color: 'bg-purple-500' },
+    { label: t('poomsae.accuracy'),     value: result.accuracy ?? 0,     color: 'bg-red-500' },
+    { label: t('poomsae.symmetry'),     value: result.symmetry ?? 0,     color: 'bg-yellow-500' },
+    { label: t('poomsae.stability'),    value: result.stability ?? 0,    color: 'bg-sky-400' },
+    { label: t('poomsae.timing'),       value: result.timing ?? 0,       color: 'bg-green-500' },
+    { label: t('poomsae.completeness'), value: result.completeness ?? 0, color: 'bg-purple-500' },
   ]
   const scoreColor = result.total_score >= 80 ? 'text-green-500' : result.total_score >= 60 ? 'text-yellow-500' : 'text-red-500'
 
@@ -37,12 +39,12 @@ function DetailModal({ result, onClose }: { result: PoomsaeResult; onClose: () =
         <div className="flex items-center justify-between mb-4">
           <div>
             <p className="font-bold text-gray-900">{result.poomsae_name}</p>
-            <p className="text-xs text-gray-400 mt-0.5">{result.student_name} · {new Date(result.created_at).toLocaleDateString('ko-KR')}</p>
+            <p className="text-xs text-gray-400 mt-0.5">{result.student_name} · {new Date(result.created_at).toLocaleDateString()}</p>
           </div>
           <button
             onClick={onClose}
             className="p-1.5 rounded-lg text-gray-400 hover:bg-gray-100 transition-colors"
-            aria-label="닫기"
+            aria-label={t('dash.cancel')}
           >
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -55,7 +57,7 @@ function DetailModal({ result, onClose }: { result: PoomsaeResult; onClose: () =
           <span className={`text-6xl font-black ${scoreColor}`}>{Math.round(result.total_score)}</span>
           <span className="text-gray-400 text-base ml-1">/100</span>
           {result.duration_seconds != null && (
-            <p className="text-xs text-gray-400 mt-1">소요 시간: {result.duration_seconds}초</p>
+            <p className="text-xs text-gray-400 mt-1">{t('poomsae.duration')}: {result.duration_seconds}{t('poomsae.seconds')}</p>
           )}
         </div>
 
@@ -83,6 +85,7 @@ function DetailModal({ result, onClose }: { result: PoomsaeResult; onClose: () =
 
 // ── 연습 요청 모달 ─────────────────────────────────────────────
 function InviteModal({ onClose }: { onClose: () => void }) {
+  const { t } = useI18n()
   const [students,    setStudents]    = useState<Student[]>([])
   const [studentId,   setStudentId]   = useState('')
   const [poomsaeId,   setPoomsaeId]   = useState(POOMSAE_LIST[0].id)
@@ -110,10 +113,10 @@ function InviteModal({ onClose }: { onClose: () => void }) {
         body:    JSON.stringify({ student_id: studentId, poomsae_id: poomsaeId, message: message.trim() || undefined }),
       })
       const data = await res.json() as { invite_url?: string; error?: string }
-      if (!res.ok) { alert(data.error ?? '생성 실패'); return }
+      if (!res.ok) { alert(data.error ?? t('common.error')); return }
       setInviteUrl(data.invite_url ?? null)
     } catch {
-      alert('초대 링크 생성에 실패했습니다.')
+      alert(t('common.error'))
     } finally {
       setIsCreating(false)
     }
@@ -121,7 +124,7 @@ function InviteModal({ onClose }: { onClose: () => void }) {
 
   function handleCopy() {
     if (!inviteUrl) return
-    navigator.clipboard.writeText(inviteUrl).catch(() => alert(`링크: ${inviteUrl}`))
+    navigator.clipboard.writeText(inviteUrl).catch(() => alert(`${inviteUrl}`))
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
   }
@@ -133,8 +136,8 @@ function InviteModal({ onClose }: { onClose: () => void }) {
     >
       <div className="bg-white w-full sm:max-w-md rounded-t-2xl sm:rounded-2xl shadow-xl max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 sticky top-0 bg-white">
-          <h2 className="font-bold text-gray-900">연습 요청 보내기</h2>
-          <button onClick={onClose} className="p-1.5 rounded-lg text-gray-400 hover:bg-gray-100 transition-colors" aria-label="닫기">
+          <h2 className="font-bold text-gray-900">{t('poomsae.sendPracticeRequest')}</h2>
+          <button onClick={onClose} className="p-1.5 rounded-lg text-gray-400 hover:bg-gray-100 transition-colors" aria-label={t('dash.cancel')}>
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
@@ -147,8 +150,8 @@ function InviteModal({ onClose }: { onClose: () => void }) {
             <div className="space-y-4">
               <div className="text-center py-4">
                 <div className="text-4xl mb-2">🔗</div>
-                <p className="font-semibold text-gray-900">초대 링크가 생성되었습니다</p>
-                <p className="text-xs text-gray-400 mt-1">7일간 유효합니다</p>
+                <p className="font-semibold text-gray-900">{t('poomsae.linkCreated')}</p>
+                <p className="text-xs text-gray-400 mt-1">{t('poomsae.linkValidDays')}</p>
               </div>
               <div className="flex gap-2">
                 <input
@@ -162,23 +165,23 @@ function InviteModal({ onClose }: { onClose: () => void }) {
                     copied ? 'bg-green-600 text-white' : 'bg-red-600 text-white hover:bg-red-700'
                   }`}
                 >
-                  {copied ? '✓ 복사됨' : '복사'}
+                  {copied ? `✓ ${t('poomsae.copied')}` : t('poomsae.copy')}
                 </button>
               </div>
               <button
                 onClick={onClose}
                 className="w-full py-2.5 border border-gray-200 text-gray-600 text-sm rounded-lg hover:bg-gray-50 transition-colors"
               >
-                닫기
+                {t('dash.cancel')}
               </button>
             </div>
           ) : (
             /* 입력 폼 */
             <>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">학생 선택 <span className="text-red-500">*</span></label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">{t('poomsae.selectStudent')} <span className="text-red-500">*</span></label>
                 {isLoading ? (
-                  <div className="py-2 text-sm text-gray-400">로딩 중...</div>
+                  <div className="py-2 text-sm text-gray-400">{t('common.loading')}</div>
                 ) : (
                   <select
                     value={studentId}
@@ -193,7 +196,7 @@ function InviteModal({ onClose }: { onClose: () => void }) {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">품새 선택 <span className="text-red-500">*</span></label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">{t('poomsae.selectPoomsae')} <span className="text-red-500">*</span></label>
                 <select
                   value={poomsaeId}
                   onChange={e => setPoomsaeId(e.target.value)}
@@ -206,12 +209,11 @@ function InviteModal({ onClose }: { onClose: () => void }) {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">메시지 (선택)</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">{t('poomsae.messageOptional')}</label>
                 <input
                   type="text"
                   value={message}
                   onChange={e => setMessage(e.target.value)}
-                  placeholder="예: 이번 심사 준비 파이팅!"
                   maxLength={100}
                   className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
                 />
@@ -222,7 +224,7 @@ function InviteModal({ onClose }: { onClose: () => void }) {
                   onClick={onClose}
                   className="flex-1 py-2.5 border border-gray-300 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-50 transition-colors"
                 >
-                  취소
+                  {t('dash.cancel')}
                 </button>
                 <button
                   onClick={handleCreate}
@@ -230,8 +232,8 @@ function InviteModal({ onClose }: { onClose: () => void }) {
                   className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-red-600 text-white text-sm font-semibold rounded-lg hover:bg-red-700 transition-colors disabled:opacity-60"
                 >
                   {isCreating ? (
-                    <><span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />생성 중...</>
-                  ) : '🔗 링크 생성'}
+                    <><span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />{t('poomsae.creating')}</>
+                  ) : `🔗 ${t('poomsae.createLink')}`}
                 </button>
               </div>
             </>
@@ -255,6 +257,7 @@ function StatCard({ label, value, sub }: { label: string; value: string | number
 
 // ── 메인 ────────────────────────────────────────────────────────
 export default function PoomsaeDashboard() {
+  const { t } = useI18n()
   const [results,    setResults]    = useState<PoomsaeResult[]>([])
   const [isLoading,  setIsLoading]  = useState(true)
   const [error,      setError]      = useState<string | null>(null)
@@ -276,7 +279,7 @@ export default function PoomsaeDashboard() {
       setTotal(data.total ?? 0)
     } catch (err) {
       captureException(err, { action: 'fetch_poomsae_results' })
-      setError('품새 기록을 불러오지 못했습니다.')
+      setError(t('common.error'))
     } finally {
       setIsLoading(false)
     }
@@ -316,9 +319,9 @@ export default function PoomsaeDashboard() {
   return (
     <div>
       <div className="flex items-center justify-between mb-5">
-        <h1 className="text-xl font-bold text-gray-900">품새 기록</h1>
+        <h1 className="text-xl font-bold text-gray-900">{t('poomsae.records')}</h1>
         <div className="flex items-center gap-3">
-          <span className="text-sm text-gray-400">총 {total}건</span>
+          <span className="text-sm text-gray-400">{t('dash.all')} {total}</span>
           <button
             onClick={() => setShowInvite(true)}
             className="flex items-center gap-1.5 px-4 py-2.5 bg-red-600 text-white text-sm font-semibold rounded-lg hover:bg-red-700 transition-colors"
@@ -326,24 +329,24 @@ export default function PoomsaeDashboard() {
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
             </svg>
-            연습 요청
+            {t('poomsae.requestPractice')}
           </button>
         </div>
       </div>
 
       {/* 요약 카드 */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
-        <StatCard label="총 연습 횟수"   value={`${total}회`} />
-        <StatCard label="평균 점수"      value={avgScore}   sub="/100" />
-        <StatCard label="최고 점수"      value={maxScore}   sub="/100" />
-        <StatCard label="최다 연습 품새" value={topPoomsae} />
+        <StatCard label={t('poomsae.totalPractice')}   value={`${total}`} />
+        <StatCard label={t('poomsae.avgScoreLabel')}   value={avgScore}   sub="/100" />
+        <StatCard label={t('poomsae.highScore')}       value={maxScore}   sub="/100" />
+        <StatCard label={t('poomsae.mostPracticed')}   value={topPoomsae} />
       </div>
 
       {/* 필터 */}
       <div className="flex gap-2 mb-4 flex-wrap">
         <input
           type="text"
-          placeholder="학생명 검색"
+          placeholder={t('poomsae.searchStudent')}
           value={filterName}
           onChange={e => setFilterName(e.target.value)}
           className="px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-red-500 w-36"
@@ -353,7 +356,7 @@ export default function PoomsaeDashboard() {
           onChange={e => setFilterPoomsae(e.target.value)}
           className="px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-red-500 bg-white"
         >
-          <option value="">전체 품새</option>
+          <option value="">{t('poomsae.allPoomsae')}</option>
           {poomsaeList.map(p => (
             <option key={p.id} value={p.id}>{p.name}</option>
           ))}
@@ -365,7 +368,7 @@ export default function PoomsaeDashboard() {
               sortKey === 'created_at' ? 'bg-red-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
             }`}
           >
-            최신순
+            {t('poomsae.sortRecent')}
           </button>
           <button
             onClick={() => setSortKey('total_score')}
@@ -373,7 +376,7 @@ export default function PoomsaeDashboard() {
               sortKey === 'total_score' ? 'bg-red-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
             }`}
           >
-            점수순
+            {t('poomsae.sortScore')}
           </button>
         </div>
       </div>
@@ -386,8 +389,8 @@ export default function PoomsaeDashboard() {
       ) : filtered.length === 0 ? (
         <EmptyState
           icon="🥋"
-          title="품새 기록이 없습니다"
-          description="원생들이 품새 연습을 완료하면 여기에 기록됩니다."
+          title={t('poomsae.noRecords')}
+          description={t('poomsae.noRecordsDesc')}
         />
       ) : (
         <>
@@ -396,13 +399,13 @@ export default function PoomsaeDashboard() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-gray-100 text-xs text-gray-400 font-medium">
-                  <th className="text-left px-4 py-3">학생</th>
-                  <th className="text-left px-4 py-3">품새</th>
-                  <th className="text-center px-4 py-3">총점</th>
-                  <th className="text-center px-4 py-3">정확도</th>
-                  <th className="text-center px-4 py-3">대칭도</th>
-                  <th className="text-center px-4 py-3">안정성</th>
-                  <th className="text-left px-4 py-3">날짜</th>
+                  <th className="text-left px-4 py-3">{t('dash.name')}</th>
+                  <th className="text-left px-4 py-3">{t('poomsae.title')}</th>
+                  <th className="text-center px-4 py-3">{t('poomsae.totalScore')}</th>
+                  <th className="text-center px-4 py-3">{t('poomsae.accuracy')}</th>
+                  <th className="text-center px-4 py-3">{t('poomsae.symmetry')}</th>
+                  <th className="text-center px-4 py-3">{t('poomsae.stability')}</th>
+                  <th className="text-left px-4 py-3">{t('dash.date')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -423,7 +426,7 @@ export default function PoomsaeDashboard() {
                     <td className="px-4 py-3 text-center text-gray-500">{Math.round(r.symmetry ?? 0)}</td>
                     <td className="px-4 py-3 text-center text-gray-500">{Math.round(r.stability ?? 0)}</td>
                     <td className="px-4 py-3 text-xs text-gray-400">
-                      {new Date(r.created_at).toLocaleDateString('ko-KR')}
+                      {new Date(r.created_at).toLocaleDateString()}
                     </td>
                   </tr>
                 ))}
@@ -447,7 +450,7 @@ export default function PoomsaeDashboard() {
                 </div>
                 <div className="flex items-center justify-between text-xs text-gray-400">
                   <span>{r.poomsae_name}</span>
-                  <span>{new Date(r.created_at).toLocaleDateString('ko-KR')}</span>
+                  <span>{new Date(r.created_at).toLocaleDateString()}</span>
                 </div>
               </div>
             ))}
