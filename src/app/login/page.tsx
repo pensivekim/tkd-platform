@@ -1,12 +1,13 @@
 'use client'
 
-import { useState, FormEvent } from 'react'
-import { useRouter } from 'next/navigation'
+import { Suspense, useState, FormEvent } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { captureException } from '@/lib/sentry'
 import { useI18n } from '@/lib/i18n'
 
-export default function LoginPage() {
+function LoginPageInner() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const { t } = useI18n()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -32,7 +33,8 @@ export default function LoginPage() {
         return
       }
 
-      router.push('/dashboard')
+      const redirect = searchParams.get('redirect')
+      router.push(redirect && redirect.startsWith('/') ? redirect : '/dashboard')
     } catch (err) {
       captureException(err, { action: 'login' })
       setError('서버와 통신 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.')
@@ -57,7 +59,7 @@ export default function LoginPage() {
         <form onSubmit={handleSubmit} className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 space-y-4">
           <div>
             <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-              {t('auth.email')}
+              {t('auth.email')}<span className="text-red-500 ml-1">*</span>
             </label>
             <input
               id="email"
@@ -74,7 +76,7 @@ export default function LoginPage() {
 
           <div>
             <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
-              {t('auth.password')}
+              {t('auth.password')}<span className="text-red-500 ml-1">*</span>
             </label>
             <input
               id="password"
@@ -117,5 +119,13 @@ export default function LoginPage() {
         </p>
       </div>
     </div>
+  )
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={null}>
+      <LoginPageInner />
+    </Suspense>
   )
 }

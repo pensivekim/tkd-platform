@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { useI18n } from '@/lib/i18n'
 
 interface HeaderProps {
@@ -12,6 +13,16 @@ interface HeaderProps {
 export default function Header({ isLoggedIn, dojanName }: HeaderProps) {
   const [menuOpen, setMenuOpen] = useState(false)
   const { t } = useI18n()
+  const router = useRouter()
+
+  function handleLogout() {
+    // 쿠키 삭제 (Domain .genomic.cc 포함)
+    document.cookie = 'genomic_session=; Path=/; Domain=.genomic.cc; Max-Age=0; Secure; SameSite=Lax'
+    document.cookie = 'genomic_session=; Path=/; Max-Age=0'
+    localStorage.clear()
+    sessionStorage.clear()
+    router.replace('/login')
+  }
 
   return (
     <header className="bg-white border-b border-gray-200 sticky top-0 z-50">
@@ -32,7 +43,7 @@ export default function Header({ isLoggedIn, dojanName }: HeaderProps) {
               {dojanName && (
                 <span className="text-sm text-gray-600 font-medium">{dojanName}</span>
               )}
-              <button className="text-sm text-gray-500 hover:text-red-600 transition-colors">
+              <button className="text-sm text-gray-500 hover:text-red-600 transition-colors" onClick={handleLogout}>
                 {t('auth.logout')}
               </button>
             </>
@@ -72,7 +83,7 @@ export default function Header({ isLoggedIn, dojanName }: HeaderProps) {
               )}
               <button
                 className="text-sm text-left text-gray-500 hover:text-red-600 transition-colors"
-                onClick={() => setMenuOpen(false)}
+                onClick={() => { setMenuOpen(false); handleLogout(); }}
               >
                 {t('auth.logout')}
               </button>

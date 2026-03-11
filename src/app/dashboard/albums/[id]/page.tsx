@@ -361,6 +361,7 @@ export default function AlbumDetailPage({ params }: Params) {
                   alt=""
                   className="w-full h-full object-cover"
                   loading="lazy"
+                  onError={(e) => { e.currentTarget.style.display = 'none' }}
                 />
 
                 {/* 원생 배지 */}
@@ -397,6 +398,7 @@ export default function AlbumDetailPage({ params }: Params) {
               src={photoUrl(lightbox.r2_key)}
               alt=""
               className="w-full max-h-[75vh] object-contain rounded-xl"
+              onError={(e) => { e.currentTarget.style.display = 'none' }}
             />
             <button
               onClick={() => setLightbox(null)}

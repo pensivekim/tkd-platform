@@ -174,14 +174,14 @@ export default function StudentsPage() {
                       <div className="flex items-center gap-2 justify-end">
                         <button
                           onClick={() => openEdit(s)}
-                          className="text-xs px-3 py-1.5 border border-gray-200 rounded-lg text-gray-600 hover:bg-gray-100 transition-colors"
+                          className="text-xs px-3 py-3 border border-gray-200 rounded-lg text-gray-600 hover:bg-gray-100 transition-colors"
                         >
                           {t('dash.edit')}
                         </button>
                         <button
                           onClick={() => handleDelete(s.id)}
                           disabled={deletingId === s.id}
-                          className="text-xs px-3 py-1.5 border border-red-200 rounded-lg text-red-500 hover:bg-red-50 transition-colors disabled:opacity-50"
+                          className="text-xs px-3 py-3 border border-red-200 rounded-lg text-red-500 hover:bg-red-50 transition-colors disabled:opacity-50"
                         >
                           {t('dash.delete')}
                         </button>
