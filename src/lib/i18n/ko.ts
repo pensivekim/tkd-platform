@@ -485,7 +485,7 @@ const ko = {
     feat4Title: "AI 포토 & 대회 라이브",
     feat4Desc: "대회 현장 사진 선수별 자동 분류. 라이브 중계 + AI Pose 오버레이.",
     targetsTitle: "누구를 위한 플랫폼인가",
-    tab1: "도장 원장님",
+    tab1: "도장 운영자",
     tab1Title: "도장 운영, 자동화하세요",
     tab1Point1: "수련생 등록·출결·수납 한 곳에서",
     tab1Point2: "학부모 알림 자동 발송",
