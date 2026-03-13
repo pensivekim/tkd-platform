@@ -1,8 +1,8 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import Link from 'next/link'
-import { Brain, Link2, Video, Camera, Building2, User, Globe, CheckCircle2 } from 'lucide-react'
+import { Brain, Link2, Video, Camera, Building2, User, Globe, Globe2, CheckCircle2 } from 'lucide-react'
 import { useI18n, LANG_FLAGS, Lang } from '@/lib/i18n'
 
 const LANGS: Lang[] = ['ko', 'en', 'th', 'es']
@@ -54,6 +54,19 @@ export default function LandingPage() {
     { value: '80M+',    suffix: '',  labelKey: 'landing.stat4Label' },
   ]
 
+  const [langOpen, setLangOpen] = useState(false)
+  const langRef = useRef<HTMLDivElement>(null)
+
+  const closeLang = useCallback((e: MouseEvent) => {
+    if (langRef.current && !langRef.current.contains(e.target as Node)) setLangOpen(false)
+  }, [])
+  useEffect(() => {
+    document.addEventListener('mousedown', closeLang)
+    return () => document.removeEventListener('mousedown', closeLang)
+  }, [closeLang])
+
+  const LANG_NAMES: Record<Lang, string> = { ko: '한국어', en: 'English', th: 'ภาษาไทย', es: 'Español' }
+
   const statsAnim   = useInView()
   const featuresAnim = useInView()
   const targetsAnim  = useInView()
@@ -74,18 +87,31 @@ export default function LandingPage() {
               <span className="text-white/40 font-normal">DOJANGWAN</span>
             </span>
           </div>
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-1.5">
-              {LANGS.map((l) => (
-                <button
-                  key={l}
-                  onClick={() => setLang(l)}
-                  title={l.toUpperCase()}
-                  className={`text-base leading-none transition-opacity ${lang === l ? 'opacity-100' : 'opacity-25 hover:opacity-60'}`}
-                >
-                  {LANG_FLAGS[l]}
-                </button>
-              ))}
+          <div className="flex items-center gap-3">
+            {/* 언어 선택 드롭다운 */}
+            <div ref={langRef} className="relative">
+              <button
+                onClick={() => setLangOpen((v) => !v)}
+                className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs transition-colors ${langOpen ? 'bg-white/[0.08] text-white' : 'text-white/40 hover:text-white/70 hover:bg-white/[0.05]'}`}
+              >
+                <Globe2 size={14} strokeWidth={1.8} />
+                <span className="font-medium">{LANG_FLAGS[lang]}</span>
+              </button>
+              {langOpen && (
+                <div className="absolute right-0 top-full mt-2 w-44 bg-[#161616] border border-white/[0.1] rounded-xl overflow-hidden shadow-2xl z-50">
+                  {LANGS.map((l) => (
+                    <button
+                      key={l}
+                      onClick={() => { setLang(l); setLangOpen(false) }}
+                      className={`w-full flex items-center gap-2.5 px-4 py-2.5 text-sm transition-colors ${lang === l ? 'bg-white/[0.07] text-white' : 'text-white/45 hover:bg-white/[0.04] hover:text-white/80'}`}
+                    >
+                      <span>{LANG_FLAGS[l]}</span>
+                      <span>{LANG_NAMES[l]}</span>
+                      {lang === l && <span className="ml-auto text-[#E53E3E] text-xs">✓</span>}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
             <Link
               href="/login"
