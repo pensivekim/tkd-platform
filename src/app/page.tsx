@@ -26,6 +26,11 @@ function useInView(threshold = 0.12) {
 export default function LandingPage() {
   const { t, lang, setLang } = useI18n()
   const [activeTab, setActiveTab] = useState(0)
+  const [session, setSession] = useState<{ loggedIn: boolean; role?: string } | null>(null)
+
+  useEffect(() => {
+    fetch('/api/auth/session').then((r) => r.json()).then(setSession)
+  }, [])
 
   const features = [
     { Icon: Brain,  titleKey: 'landing.feat1Title', descKey: 'landing.feat1Desc', tag: 'MediaPipe Pose',   href: '/poomsae' },
@@ -109,12 +114,21 @@ export default function LandingPage() {
                 </div>
               )}
             </div>
-            <Link
-              href="/login"
-              className="text-xs px-4 py-1.5 bg-white text-black rounded-lg hover:bg-white/90 transition-colors font-semibold"
-            >
-              {t('auth.login')}
-            </Link>
+            {session?.loggedIn ? (
+              <Link
+                href={session.role === 'platform_manager' ? '/admin' : '/dashboard'}
+                className="text-xs px-4 py-1.5 bg-white text-black rounded-lg hover:bg-white/90 transition-colors font-semibold"
+              >
+                {session.role === 'platform_manager' ? '관리자 패널 →' : '대시보드 →'}
+              </Link>
+            ) : (
+              <Link
+                href="/login"
+                className="text-xs px-4 py-1.5 bg-white text-black rounded-lg hover:bg-white/90 transition-colors font-semibold"
+              >
+                {t('auth.login')}
+              </Link>
+            )}
           </div>
         </div>
       </header>
