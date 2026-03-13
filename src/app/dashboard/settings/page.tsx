@@ -8,6 +8,7 @@ import { REGION_LIST } from '@/lib/constants'
 import LoadingSpinner from '@/components/ui/LoadingSpinner'
 import ErrorMessage from '@/components/ui/ErrorMessage'
 import { subscribePush, unsubscribePush } from '@/lib/pushClient'
+import TeamSection from './TeamSection'
 
 // ─── 타입 ───────────────────────────────────────────────────────────────────
 interface DojangInfo {
@@ -429,7 +430,10 @@ export default function SettingsPage() {
         </div>
       </Section>
 
-      {/* ── 섹션 4: 요금제 안내 ── */}
+      {/* ── 섹션 4: 팀 관리 ── */}
+      <TeamSection />
+
+      {/* ── 섹션 5: 요금제 안내 ── */}
       <Section title={t('settings.planInfo')}>
         {/* 현재 플랜 배지 */}
         <div className="flex items-center gap-3 mb-5">
