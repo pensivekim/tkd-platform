@@ -28,7 +28,7 @@ export async function POST(req: NextRequest) {
     }
 
     const user = await db
-      .prepare('SELECT id, dojang_id, email, password_hash, name, role FROM users WHERE email = ?')
+      .prepare('SELECT id, dojang_id, email, password_hash, name, role, is_root FROM users WHERE email = ?')
       .bind(email.toLowerCase().trim())
       .first() as {
         id: string
@@ -37,6 +37,7 @@ export async function POST(req: NextRequest) {
         password_hash: string
         name: string
         role: string
+        is_root: number
       } | null
 
     if (!user || !user.password_hash) {
@@ -54,6 +55,7 @@ export async function POST(req: NextRequest) {
       dojanId: user.dojang_id,
       role: user.role,
       name: user.name,
+      isRoot: user.is_root === 1,
     })
       .setProtectedHeader({ alg: 'HS256' })
       .setIssuedAt()

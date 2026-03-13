@@ -6,6 +6,7 @@ export interface JwtPayload {
   dojanId: string | null
   role: string
   name: string
+  isRoot?: boolean
 }
 
 export async function verifyJwt(token: string): Promise<JwtPayload | null> {
