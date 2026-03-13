@@ -118,9 +118,6 @@ export default function PoomsaePage() {
             >
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                 <span style={{ fontSize: 26, fontWeight: 900, color: p.color, letterSpacing: 1 }}>
-                  {p.level.split("~")[0].trim()}단
-                </span>
-                <span style={{ fontSize: 10, color: p.color, background: `${p.color}15`, border: `1px solid ${p.color}30`, borderRadius: 20, padding: "2px 8px" }}>
                   {p.level}
                 </span>
               </div>
