@@ -48,10 +48,10 @@ export default function LandingPage() {
   ]
 
   const stats = [
-    { value: '210', suffix: '', labelKey: 'landing.stat1Label' },
-    { value: '33',  suffix: '', labelKey: 'landing.stat2Label' },
-    { value: '<500', suffix: 'ms', labelKey: 'landing.stat3Label' },
-    { value: '$0.001', suffix: '', labelKey: 'landing.stat4Label' },
+    { value: '210',     suffix: '',  labelKey: 'landing.stat1Label' },
+    { value: '15,000+', suffix: '',  labelKey: 'landing.stat2Label' },
+    { value: '4,000+',  suffix: '',  labelKey: 'landing.stat3Label' },
+    { value: '80M+',    suffix: '',  labelKey: 'landing.stat4Label' },
   ]
 
   const statsAnim   = useInView()
