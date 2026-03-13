@@ -164,7 +164,7 @@ export default function CertLandingPage() {
         <h2 style={{ textAlign: "center", fontSize: 22, fontWeight: 800, marginBottom: 28, wordBreak: "keep-all" }}>
           종이 단증과 무엇이 다른가
         </h2>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))", gap: 14 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 14 }}>
           {FEATURES.map(({ Icon, title, desc, color }) => (
             <div key={title} style={{
               background: "rgba(255,255,255,0.025)",
