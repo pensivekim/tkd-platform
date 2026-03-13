@@ -51,7 +51,7 @@ export default function LandingPage() {
     { value: '210',     suffix: '',  labelKey: 'landing.stat1Label' },
     { value: '15,000+', suffix: '',  labelKey: 'landing.stat2Label' },
     { value: '4,000+',  suffix: '',  labelKey: 'landing.stat3Label' },
-    { value: '80M+',    suffix: '',  labelKey: 'landing.stat4Label' },
+    { value: t('landing.stat4Value'), suffix: '', labelKey: 'landing.stat4Label' },
   ]
 
   const [langOpen, setLangOpen] = useState(false)

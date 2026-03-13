@@ -475,6 +475,7 @@ const th: Translations = {
     stat2Label: "โรงเรียนในสหรัฐฯ",
     stat3Label: "โรงเรียนในไทย",
     stat4Label: "ผู้ฝึกทั่วโลก",
+    stat4Value: "80M+",
     featuresLabel: "Core Features",
     featuresTitle: "เทคโนโลยีหลักของแพลตฟอร์ม",
     feat1Title: "AI ให้คะแนนพุมเซ",

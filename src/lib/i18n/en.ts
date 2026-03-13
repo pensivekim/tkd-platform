@@ -475,6 +475,7 @@ const en: Translations = {
     stat2Label: "Dojangs in USA",
     stat3Label: "Dojangs in Thailand",
     stat4Label: "Global Practitioners",
+    stat4Value: "80M+",
     featuresLabel: "Core Features",
     featuresTitle: "Platform Core Technology",
     feat1Title: "AI Poomsae Scoring",

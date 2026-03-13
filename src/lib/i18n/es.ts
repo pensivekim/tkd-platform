@@ -475,6 +475,7 @@ const es: Translations = {
     stat2Label: "Dojangs en EE.UU.",
     stat3Label: "Dojangs en Tailandia",
     stat4Label: "Practicantes Globales",
+    stat4Value: "80M+",
     featuresLabel: "Core Features",
     featuresTitle: "Tecnología Central de la Plataforma",
     feat1Title: "Puntuación IA de Poomsae",

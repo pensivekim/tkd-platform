@@ -473,6 +473,7 @@ const ko = {
     stat2Label: "미국 태권도장",
     stat3Label: "태국 태권도장",
     stat4Label: "글로벌 수련 인구",
+    stat4Value: "8,000만+",
     featuresLabel: "Core Features",
     featuresTitle: "플랫폼 핵심 기술",
     feat1Title: "AI 품새 채점",
