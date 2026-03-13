@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useI18n } from "@/lib/i18n";
 import { computePoomsaeScore, resetPoomsaeScore } from "@/lib/pose-scoring";
 import type { Landmark, PoomsaeScore } from "@/lib/pose-scoring";
+import PoseOverlay from "@/components/ai/PoseOverlay";
 
 declare global {
   interface Window {
@@ -39,6 +40,7 @@ export default function FreePracticePage() {
   const { t } = useI18n();
   const videoRef = useRef<HTMLVideoElement>(null);
   const [poseReady, setPoseReady] = useState(false);
+  const [landmarks, setLandmarks] = useState<Landmark[] | null>(null);
   const [score, setScore] = useState<PoomsaeScore>({ total: 0, accuracy: 0, symmetry: 0, stability: 0, timing: 0, completeness: 0 });
 
   useEffect(() => {
@@ -59,6 +61,7 @@ export default function FreePracticePage() {
       pose.setOptions({ modelComplexity: 1, smoothLandmarks: true, minDetectionConfidence: 0.5, minTrackingConfidence: 0.5 });
       pose.onResults(results => {
         if (!results.poseLandmarks) return;
+        setLandmarks(results.poseLandmarks);
         setScore(computePoomsaeScore(results.poseLandmarks));
       });
       const camera = new window.Camera(video, {
@@ -112,6 +115,7 @@ export default function FreePracticePage() {
           <div style={{ position: "relative", background: "#080810", borderRadius: 12, overflow: "hidden", border: "1px solid rgba(255,255,255,0.08)", aspectRatio: "4/3" }}>
             <video ref={videoRef} autoPlay playsInline muted
               style={{ width: "100%", height: "100%", objectFit: "cover", transform: "scaleX(-1)" }} />
+            <PoseOverlay videoRef={videoRef} landmarks={landmarks} enabled={poseReady} />
             <div style={{ position: "absolute", bottom: 8, left: 8, background: "rgba(0,0,0,0.7)", borderRadius: 20, padding: "4px 12px", fontSize: 12 }}>
               {poseReady ? "AI 분석 🟢" : t("poomsae.detectingPose")}
             </div>
