@@ -30,79 +30,120 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
     href === '/dashboard' ? pathname === '/dashboard' : pathname.startsWith(href)
 
   const sidebarContent = (
-    <nav className="flex flex-col gap-1 p-4 h-full">
-      {/* 로고 영역 */}
-      <div className="flex items-center gap-2 px-3 py-3 mb-4">
-        <span className="text-xl">🥋</span>
-        <div className="flex flex-col leading-tight">
-          <span className="font-bold text-red-600 text-lg">태권도 플랫폼</span>
-          <span className="font-normal text-gray-400" style={{ fontSize: 11 }}>도장관(DOJANGWAN)</span>
-        </div>
+    <nav style={{ display: 'flex', flexDirection: 'column', gap: 2, padding: 16, height: '100%' }}>
+      {/* 로고 */}
+      <div style={{ padding: '12px 10px 20px', marginBottom: 4 }}>
+        <Link href="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 8 }}>
+          <span style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 22, letterSpacing: 3, color: '#E9C46A', lineHeight: 1 }}>TKP</span>
+          <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.2 }}>
+            <span style={{ fontSize: 11, fontWeight: 700, color: '#F0F0F5' }}>DOJANGWAN</span>
+            <span style={{ fontSize: 9, color: '#404050', letterSpacing: 0.5 }}>도장관</span>
+          </div>
+        </Link>
       </div>
 
+      {/* 구분선 */}
+      <div style={{ height: 1, background: 'rgba(255,255,255,0.06)', margin: '0 4px 12px' }} />
+
+      {/* 네비게이션 */}
       {NAV_KEYS.map((item) => (
         <Link
           key={item.href}
           href={item.href}
           onClick={onClose}
-          className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
-            isActive(item.href)
-              ? 'bg-red-50 text-red-600'
-              : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
-          }`}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 10,
+            padding: '9px 12px',
+            borderRadius: 10,
+            fontSize: 13,
+            fontWeight: isActive(item.href) ? 700 : 500,
+            textDecoration: 'none',
+            transition: 'all 0.15s',
+            background: isActive(item.href) ? 'rgba(230,57,70,0.12)' : 'transparent',
+            color: isActive(item.href) ? '#E63946' : '#909098',
+            borderLeft: isActive(item.href) ? '2px solid #E63946' : '2px solid transparent',
+          }}
         >
-          <span className="text-base" aria-hidden="true">{item.icon}</span>
+          <span style={{ fontSize: 15 }}>{item.icon}</span>
           {t(item.key)}
         </Link>
       ))}
 
-      {/* 언어 전환 */}
-      <div className="mt-auto pt-4 border-t border-gray-100">
-        <div className="flex gap-1 px-2 flex-wrap">
+      {/* 하단: 언어 전환 + 랜딩 링크 */}
+      <div style={{ marginTop: 'auto', paddingTop: 16, borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+        {/* 언어 */}
+        <div style={{ display: 'flex', gap: 4, padding: '0 4px', marginBottom: 12, flexWrap: 'wrap' }}>
           {LANGS.map((l) => (
             <button
               key={l}
               onClick={() => setLang(l)}
-              title={t(`common.lang${l.charAt(0).toUpperCase()}${l.slice(1)}`)}
-              className={`px-2 py-1 rounded text-sm transition-colors ${
-                lang === l
-                  ? 'bg-red-100 text-red-600 font-medium'
-                  : 'text-gray-400 hover:text-gray-700 hover:bg-gray-100'
-              }`}
+              style={{
+                padding: '4px 8px',
+                borderRadius: 6,
+                fontSize: 13,
+                border: 'none',
+                cursor: 'pointer',
+                transition: 'all 0.15s',
+                background: lang === l ? 'rgba(230,57,70,0.15)' : 'transparent',
+                color: lang === l ? '#E63946' : '#606070',
+                fontWeight: lang === l ? 700 : 400,
+              }}
             >
               {LANG_FLAGS[l]}
             </button>
           ))}
         </div>
+        {/* 랜딩 링크 */}
+        <Link href="/" style={{
+          display: 'block', padding: '8px 12px', borderRadius: 8,
+          fontSize: 11, color: '#404050', textDecoration: 'none',
+          border: '1px solid rgba(255,255,255,0.05)',
+          textAlign: 'center',
+        }}>
+          ← 서비스 홈으로
+        </Link>
       </div>
     </nav>
   )
 
+  const sidebarStyle: React.CSSProperties = {
+    background: '#0D0D16',
+    borderRight: '1px solid rgba(255,255,255,0.07)',
+    display: 'flex',
+    flexDirection: 'column',
+    width: 200,
+    minHeight: '100vh',
+    flexShrink: 0,
+  }
+
   return (
     <>
       {/* 데스크탑: 고정 사이드바 */}
-      <aside className="hidden md:flex flex-col w-56 min-h-screen bg-white border-r border-gray-200 flex-shrink-0">
+      <aside className="hidden md:flex" style={sidebarStyle}>
         {sidebarContent}
       </aside>
 
       {/* 모바일: 오버레이 */}
       {isOpen && (
         <>
-          {/* 배경 딤 */}
           <div
-            className="fixed inset-0 bg-black/40 z-40 md:hidden"
+            style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 40 }}
+            className="md:hidden"
             onClick={onClose}
             aria-hidden="true"
           />
-          {/* 사이드바 패널 */}
-          <aside className="fixed left-0 top-0 bottom-0 w-56 bg-white z-50 shadow-xl md:hidden">
-            {/* 닫기 버튼 */}
+          <aside
+            style={{ ...sidebarStyle, position: 'fixed', left: 0, top: 0, bottom: 0, zIndex: 50, boxShadow: '4px 0 24px rgba(0,0,0,0.5)' }}
+            className="md:hidden"
+          >
             <button
               onClick={onClose}
-              className="absolute top-3 right-3 p-1.5 rounded-md text-gray-400 hover:bg-gray-100"
+              style={{ position: 'absolute', top: 12, right: 12, padding: 6, borderRadius: 6, background: 'rgba(255,255,255,0.05)', border: 'none', color: '#606070', cursor: 'pointer' }}
               aria-label="메뉴 닫기"
             >
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
             </button>

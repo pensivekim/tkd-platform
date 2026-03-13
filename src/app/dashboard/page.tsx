@@ -14,10 +14,10 @@ interface Stats {
 }
 
 const CARD_META = [
-  { key: 'totalStudents'      as const, tKey: 'dash.totalStudents',    unit: '명', icon: '👥', color: 'bg-blue-50 text-blue-600'    },
-  { key: 'todayAttendance'    as const, tKey: 'dash.todayAttendance',  unit: '명', icon: '✅', color: 'bg-green-50 text-green-600'  },
-  { key: 'monthlyNewStudents' as const, tKey: 'dash.students',         unit: '명', icon: '🆕', color: 'bg-yellow-50 text-yellow-600' },
-  { key: 'totalNotices'       as const, tKey: 'dash.notices',          unit: '건', icon: '📢', color: 'bg-red-50 text-red-600'      },
+  { key: 'totalStudents'      as const, tKey: 'dash.totalStudents',   unit: '명', icon: '👥', color: '#3B82F6' },
+  { key: 'todayAttendance'    as const, tKey: 'dash.todayAttendance', unit: '명', icon: '✅', color: '#4ade80' },
+  { key: 'monthlyNewStudents' as const, tKey: 'dash.students',        unit: '명', icon: '🆕', color: '#E9C46A' },
+  { key: 'totalNotices'       as const, tKey: 'dash.notices',         unit: '건', icon: '📢', color: '#E63946' },
 ]
 
 export default function DashboardPage() {
@@ -46,9 +46,11 @@ export default function DashboardPage() {
 
   return (
     <div>
-      <div className="mb-6">
-        <h1 className="text-xl font-bold text-gray-900">{t('dash.nav.overview')}</h1>
-        <p className="text-sm text-gray-500 mt-1" style={{ wordBreak: 'keep-all' }}>
+      <div style={{ marginBottom: 28 }}>
+        <h1 style={{ fontSize: 22, fontWeight: 700, color: '#F0F0F5', marginBottom: 4 }}>
+          {t('dash.nav.overview')}
+        </h1>
+        <p style={{ fontSize: 13, color: '#606070', wordBreak: 'keep-all' }}>
           {t('dash.overview')}
         </p>
       </div>
@@ -56,27 +58,37 @@ export default function DashboardPage() {
       {error ? (
         <ErrorMessage message={error} retry={fetchStats} />
       ) : (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 12 }} className="md:grid-cols-4">
           {CARD_META.map((card) => (
             <div
               key={card.key}
-              className="bg-white rounded-2xl border border-gray-100 p-4 md:p-5 shadow-sm"
+              style={{
+                background: '#0E0E18',
+                border: '1px solid rgba(255,255,255,0.07)',
+                borderRadius: 16,
+                padding: '20px 18px',
+              }}
             >
-              <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-xl mb-3 ${card.color}`}>
+              <div style={{
+                width: 40, height: 40, borderRadius: 10, marginBottom: 14,
+                background: `${card.color}18`,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: 18,
+              }}>
                 {card.icon}
               </div>
-              <p className="text-sm text-gray-500 mb-1" style={{ wordBreak: 'keep-all' }}>
+              <p style={{ fontSize: 12, color: '#606070', marginBottom: 6, wordBreak: 'keep-all' }}>
                 {t(card.tKey)}
               </p>
-              <div className="flex items-baseline gap-1 min-h-[2rem]">
+              <div style={{ display: 'flex', alignItems: 'baseline', gap: 4, minHeight: 32 }}>
                 {isLoading ? (
                   <LoadingSpinner size="sm" />
                 ) : (
                   <>
-                    <span className="text-2xl font-extrabold text-gray-900">
+                    <span style={{ fontSize: 28, fontWeight: 900, color: card.color, fontFamily: "'Outfit', sans-serif" }}>
                       {stats?.[card.key] ?? 0}
                     </span>
-                    <span className="text-sm text-gray-400">{card.unit}</span>
+                    <span style={{ fontSize: 12, color: '#606070' }}>{card.unit}</span>
                   </>
                 )}
               </div>

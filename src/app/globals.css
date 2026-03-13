@@ -24,3 +24,81 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* ── Dashboard dark theme overrides ─────────────────────────────────────── */
+/* 대시보드 내부 페이지: 기존 Tailwind 라이트 클래스 → 다크 테마로 일괄 교체 */
+
+.dashboard-dark {
+  font-family: 'Outfit', system-ui, sans-serif;
+  color: #F0F0F5;
+}
+
+/* 카드/섹션 배경 */
+.dashboard-dark .bg-white,
+.dashboard-dark .bg-gray-50 {
+  background-color: #0E0E18 !important;
+}
+
+/* 카드 테두리 */
+.dashboard-dark .border-gray-100,
+.dashboard-dark .border-gray-200 {
+  border-color: rgba(255,255,255,0.07) !important;
+}
+
+/* 제목 텍스트 */
+.dashboard-dark .text-gray-900 {
+  color: #F0F0F5 !important;
+}
+
+/* 본문 텍스트 */
+.dashboard-dark .text-gray-700,
+.dashboard-dark .text-gray-600 {
+  color: #C0C0CC !important;
+}
+
+/* 보조 텍스트 */
+.dashboard-dark .text-gray-500,
+.dashboard-dark .text-gray-400 {
+  color: #606070 !important;
+}
+
+/* 입력창 */
+.dashboard-dark input,
+.dashboard-dark select,
+.dashboard-dark textarea {
+  background-color: rgba(255,255,255,0.04) !important;
+  border-color: rgba(255,255,255,0.1) !important;
+  color: #F0F0F5 !important;
+}
+.dashboard-dark input::placeholder,
+.dashboard-dark textarea::placeholder {
+  color: #404050 !important;
+}
+.dashboard-dark input:focus,
+.dashboard-dark select:focus,
+.dashboard-dark textarea:focus {
+  border-color: #E63946 !important;
+  outline: none !important;
+  box-shadow: 0 0 0 2px rgba(230,57,70,0.2) !important;
+}
+
+/* 구분선 */
+.dashboard-dark .border-gray-100:not(.rounded-2xl):not(.rounded-xl):not(.rounded-lg) {
+  border-color: rgba(255,255,255,0.06) !important;
+}
+
+/* 뱃지: 현재 플랜 등 */
+.dashboard-dark .bg-gray-100 { background-color: rgba(255,255,255,0.07) !important; }
+.dashboard-dark .text-gray-700 { color: #C0C0CC !important; }
+.dashboard-dark .bg-blue-100  { background-color: rgba(59,130,246,0.15) !important; }
+.dashboard-dark .bg-red-50    { background-color: rgba(230,57,70,0.08) !important; }
+.dashboard-dark .bg-red-100   { background-color: rgba(230,57,70,0.15) !important; }
+.dashboard-dark .bg-green-50  { background-color: rgba(74,222,128,0.08) !important; }
+
+/* 호버 상태 */
+.dashboard-dark .hover\:bg-gray-100:hover { background-color: rgba(255,255,255,0.05) !important; }
+.dashboard-dark .hover\:bg-gray-200:hover { background-color: rgba(255,255,255,0.08) !important; }
+
+/* 테이블/리스트 아이템 */
+.dashboard-dark .divide-gray-100 > * + * { border-color: rgba(255,255,255,0.05) !important; }
+.dashboard-dark .divide-gray-200 > * + * { border-color: rgba(255,255,255,0.07) !important; }
