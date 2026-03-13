@@ -81,11 +81,7 @@ export default function LandingPage() {
         <div className="max-w-6xl mx-auto px-5 h-14 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
             <span className="text-xl">🥋</span>
-            <span className="font-bold text-sm tracking-tight">
-              <span className="text-white">TKP</span>
-              <span className="text-[#E53E3E] mx-1.5">·</span>
-              <span className="text-white/40 font-normal">DOJANGWAN</span>
-            </span>
+            <span className="font-bold text-sm tracking-tight text-white">TKP</span>
           </div>
           <div className="flex items-center gap-3">
             {/* 언어 선택 드롭다운 */}
