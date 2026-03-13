@@ -28,10 +28,10 @@ export default function LandingPage() {
   const [activeTab, setActiveTab] = useState(0)
 
   const features = [
-    { Icon: Brain,  titleKey: 'landing.feat1Title', descKey: 'landing.feat1Desc', tag: 'MediaPipe Pose' },
-    { Icon: Link2,  titleKey: 'landing.feat2Title', descKey: 'landing.feat2Desc', tag: 'Polygon SBT' },
-    { Icon: Video,  titleKey: 'landing.feat3Title', descKey: 'landing.feat3Desc', tag: 'WebRTC SFU' },
-    { Icon: Camera, titleKey: 'landing.feat4Title', descKey: 'landing.feat4Desc', tag: 'Face Recognition' },
+    { Icon: Brain,  titleKey: 'landing.feat1Title', descKey: 'landing.feat1Desc', tag: 'MediaPipe Pose',   href: '/poomsae' },
+    { Icon: Link2,  titleKey: 'landing.feat2Title', descKey: 'landing.feat2Desc', tag: 'Polygon SBT',      href: '/cert'    },
+    { Icon: Video,  titleKey: 'landing.feat3Title', descKey: 'landing.feat3Desc', tag: 'WebRTC SFU',       href: '/exam'    },
+    { Icon: Camera, titleKey: 'landing.feat4Title', descKey: 'landing.feat4Desc', tag: 'Face Recognition', href: '/arena'   },
   ]
 
   const tabs = [
@@ -208,22 +208,26 @@ export default function LandingPage() {
           {t('landing.featuresTitle')}
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {features.map(({ Icon, titleKey, descKey, tag }) => (
-            <div
+          {features.map(({ Icon, titleKey, descKey, tag, href }) => (
+            <Link
               key={titleKey}
-              className="group border border-white/[0.07] bg-white/[0.025] rounded-2xl p-7 hover:border-[#E53E3E]/25 hover:bg-white/[0.04] transition-all duration-300"
+              href={href}
+              className="group border border-white/[0.07] bg-white/[0.025] rounded-2xl p-7 hover:border-[#E53E3E]/25 hover:bg-white/[0.04] transition-all duration-300 block no-underline"
             >
               <div className="w-10 h-10 rounded-xl bg-[#E53E3E]/10 flex items-center justify-center mb-5">
                 <Icon size={19} className="text-[#E53E3E]" strokeWidth={1.8} />
               </div>
-              <h3 className="font-bold text-base mb-2" style={{ wordBreak: 'keep-all' }}>{t(titleKey)}</h3>
+              <h3 className="font-bold text-base mb-2 text-white" style={{ wordBreak: 'keep-all' }}>{t(titleKey)}</h3>
               <p className="text-sm text-white/45 leading-relaxed mb-5" style={{ wordBreak: 'keep-all' }}>
                 {t(descKey)}
               </p>
-              <span className="inline-block text-[10px] font-mono text-[#E53E3E]/60 bg-[#E53E3E]/[0.07] border border-[#E53E3E]/[0.12] px-2.5 py-0.5 rounded-full">
-                {tag}
-              </span>
-            </div>
+              <div className="flex items-center justify-between">
+                <span className="inline-block text-[10px] font-mono text-[#E53E3E]/60 bg-[#E53E3E]/[0.07] border border-[#E53E3E]/[0.12] px-2.5 py-0.5 rounded-full">
+                  {tag}
+                </span>
+                <span className="text-white/20 group-hover:text-[#E53E3E]/60 transition-colors text-sm">→</span>
+              </div>
+            </Link>
           ))}
         </div>
       </section>
