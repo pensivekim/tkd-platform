@@ -17,8 +17,8 @@ export async function GET() {
     if (!db) return Response.json({ error: 'DB 연결 실패' }, { status: 503 })
 
     const { results } = await db
-      .prepare('SELECT id, name, email, role, created_at FROM users WHERE role = ? ORDER BY created_at ASC')
-      .bind('platform_manager')
+      .prepare('SELECT id, name, email, role, created_at FROM users WHERE role = ? AND id != ? ORDER BY created_at ASC')
+      .bind('platform_manager', me.userId)
       .all()
 
     return Response.json({ managers: results })
