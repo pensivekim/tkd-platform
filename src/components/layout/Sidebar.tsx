@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useI18n, LANG_FLAGS, type Lang } from '@/lib/i18n'
+import { logout } from '@/app/actions'
 
 const NAV_KEYS: { href: string; key: string; icon: string }[] = [
   { href: '/dashboard',            key: 'dash.nav.overview',     icon: '🏠' },
@@ -104,6 +105,18 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
         }}>
           ← 서비스 홈으로
         </Link>
+        {/* 로그아웃 */}
+        <form action={logout}>
+          <button type="submit" style={{
+            width: '100%', marginTop: 6,
+            display: 'block', padding: '8px 12px', borderRadius: 8,
+            fontSize: 11, color: '#E63946', background: 'transparent',
+            border: '1px solid rgba(230,57,70,0.15)',
+            textAlign: 'center', cursor: 'pointer',
+          }}>
+            로그아웃
+          </button>
+        </form>
       </div>
     </nav>
   )

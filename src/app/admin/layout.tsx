@@ -1,6 +1,7 @@
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { verifyJwt } from '@/lib/auth'
+import { logout } from './actions'
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const cookieStore = await cookies()
@@ -36,6 +37,11 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           <a href="/dashboard" style={{ fontSize: 12, color: '#606070', textDecoration: 'none', padding: '6px 12px', borderRadius: 6, border: '1px solid rgba(255,255,255,0.06)' }}>
             도장관 →
           </a>
+          <form action={logout}>
+            <button type="submit" style={{ fontSize: 12, color: '#E63946', background: 'transparent', padding: '6px 12px', borderRadius: 6, border: '1px solid rgba(230,57,70,0.2)', cursor: 'pointer' }}>
+              로그아웃
+            </button>
+          </form>
         </div>
       </header>
       <main style={{ maxWidth: 1100, margin: '0 auto', padding: '24px 16px' }}>
