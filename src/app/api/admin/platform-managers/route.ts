@@ -97,7 +97,7 @@ export async function DELETE(req: NextRequest) {
     const target = await db
       .prepare('SELECT id, is_root FROM users WHERE id = ? AND role = ?')
       .bind(id, 'platform_manager')
-      .first<{ id: string; is_root: number }>()
+      .first() as { id: string; is_root: number } | null
 
     if (!target) return Response.json({ error: '해당 계정을 찾을 수 없습니다.' }, { status: 404 })
     if (target.is_root === 1) {
