@@ -4,6 +4,7 @@ import { z } from 'zod'
 import { nanoid } from 'nanoid'
 import { authFromRequest } from '@/lib/auth'
 import { captureException } from '@/lib/sentry'
+import { sendPushToDojang } from '@/lib/push'
 
 const NoticeSchema = z.object({
   title:     z.string().min(1, '제목을 입력해주세요.').max(100),
@@ -66,6 +67,14 @@ export async function POST(req: NextRequest) {
       .run()
 
     const notice = await db.prepare('SELECT * FROM notices WHERE id = ?').bind(id).first()
+
+    // 공지 등록 시 도장 구독자 전체에게 푸시
+    sendPushToDojang(db, payload.dojanId, {
+      title: `📢 ${title}`,
+      body:  content.slice(0, 80) + (content.length > 80 ? '...' : ''),
+      url:   '/dashboard/notices',
+    }).catch(() => null)
+
     return Response.json({ notice }, { status: 201 })
   } catch (error) {
     captureException(error, { route: 'POST /api/notices' })

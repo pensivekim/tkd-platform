@@ -5,6 +5,7 @@ import { nanoid } from 'nanoid'
 import { authFromRequest } from '@/lib/auth'
 import { captureException } from '@/lib/sentry'
 import { ATTENDANCE_TYPES } from '@/lib/constants'
+import { sendPushToStudent } from '@/lib/push'
 
 const today = () => new Date().toISOString().slice(0, 10)
 
@@ -105,6 +106,22 @@ export async function POST(req: NextRequest) {
     }
 
     const record = await db.prepare('SELECT * FROM attendance WHERE id = ?').bind(id).first()
+
+    // 출석(present)이고 신규 체크인인 경우 학부모에게 푸시 알림
+    if (!existing && type === '출석') {
+      const student = await db
+        .prepare('SELECT name FROM students WHERE id = ?')
+        .bind(student_id)
+        .first() as { name: string } | null
+      if (student) {
+        sendPushToStudent(db, student_id, {
+          title: '출석 확인',
+          body:  `${student.name} 학생이 도장에 도착했습니다.`,
+          url:   '/dashboard/attendance',
+        }).catch(() => null) // 푸시 실패가 출석 응답을 막지 않도록
+      }
+    }
+
     return Response.json({ attendance: record, updated: !!existing }, { status: existing ? 200 : 201 })
   } catch (error) {
     captureException(error, { route: 'POST /api/attendance' })

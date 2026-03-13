@@ -7,6 +7,7 @@ import { useI18n } from '@/lib/i18n'
 import { REGION_LIST } from '@/lib/constants'
 import LoadingSpinner from '@/components/ui/LoadingSpinner'
 import ErrorMessage from '@/components/ui/ErrorMessage'
+import { subscribePush, unsubscribePush } from '@/lib/pushClient'
 
 // ─── 타입 ───────────────────────────────────────────────────────────────────
 interface DojangInfo {
@@ -77,6 +78,26 @@ export default function SettingsPage() {
   const [pwErrors, setPwErrors] = useState<Record<string, string>>({})
   const [pwSaving, setPwSaving] = useState(false)
   const [pwMsg, setPwMsg]       = useState('')
+
+  // 푸시 알림 상태
+  const [pushStatus, setPushStatus] = useState<'idle' | 'granted' | 'denied' | 'loading'>('idle')
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || !('Notification' in window)) return
+    if (Notification.permission === 'granted') setPushStatus('granted')
+    else if (Notification.permission === 'denied') setPushStatus('denied')
+  }, [])
+
+  async function handlePushToggle() {
+    if (pushStatus === 'granted') {
+      await unsubscribePush()
+      setPushStatus('idle')
+    } else {
+      setPushStatus('loading')
+      const ok = await subscribePush()
+      setPushStatus(ok ? 'granted' : 'denied')
+    }
+  }
 
   // 요금제 정보 (번역)
   const PLAN_INFO = {
@@ -381,7 +402,34 @@ export default function SettingsPage() {
         </form>
       </Section>
 
-      {/* ── 섹션 3: 요금제 안내 ── */}
+      {/* ── 섹션 3: 푸시 알림 ── */}
+      <Section title="푸시 알림">
+        <p className="text-sm text-gray-500 mb-4" style={{ wordBreak: 'keep-all' }}>
+          출석 체크 시 학부모 기기에 알림을 보내거나, 공지사항 등록 시 구독자 전체에게 알림을 발송합니다.<br />
+          이 기기에서 알림을 허용하면 도장 구독자로 등록됩니다.
+        </p>
+        <div className="flex items-center gap-4 flex-wrap">
+          <button
+            onClick={handlePushToggle}
+            disabled={pushStatus === 'loading' || pushStatus === 'denied'}
+            className={`flex items-center gap-2 px-5 py-2.5 text-sm font-semibold rounded-lg transition-colors disabled:opacity-50 ${
+              pushStatus === 'granted'
+                ? 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                : 'bg-red-600 text-white hover:bg-red-700'
+            }`}
+          >
+            {pushStatus === 'loading' && <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />}
+            {pushStatus === 'granted' ? '🔔 알림 구독 중 (해제하기)' : pushStatus === 'denied' ? '🚫 알림 차단됨 (브라우저 설정에서 허용)' : '🔔 알림 허용하기'}
+          </button>
+          {pushStatus === 'granted' && (
+            <span className="text-xs text-green-600 bg-green-50 px-3 py-1.5 rounded-full">
+              ✓ 출석 알림 · 공지 알림 수신 중
+            </span>
+          )}
+        </div>
+      </Section>
+
+      {/* ── 섹션 4: 요금제 안내 ── */}
       <Section title={t('settings.planInfo')}>
         {/* 현재 플랜 배지 */}
         <div className="flex items-center gap-3 mb-5">
