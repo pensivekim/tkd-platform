@@ -345,7 +345,14 @@ function SubManagerTab() {
 
 // ── 메인 ─────────────────────────────────────────────────────────────────────
 export default function AdminPage() {
-  const [tab, setTab] = useState<'dojangs' | 'submanagers'>('dojangs')
+  const [tab, setTab]     = useState<'dojangs' | 'submanagers'>('dojangs')
+  const [isRoot, setIsRoot] = useState(false)
+
+  useEffect(() => {
+    fetch('/api/admin/me')
+      .then((r) => r.json())
+      .then((d: { isRoot?: boolean }) => setIsRoot(!!d.isRoot))
+  }, [])
 
   const tabStyle = (active: boolean): React.CSSProperties => ({
     padding: '8px 20px', borderRadius: 8, fontSize: 13, fontWeight: 600,
@@ -361,18 +368,20 @@ export default function AdminPage() {
         <p style={{ fontSize: 13, color: '#606070' }}>전체 도장 및 사용자를 관리합니다.</p>
       </div>
 
-      {/* 탭 */}
+      {/* 탭 — 부관리자 탭은 isRoot만 */}
       <div style={{ display: 'flex', gap: 4, marginBottom: 24, padding: '4px', background: 'rgba(255,255,255,0.03)', borderRadius: 10, width: 'fit-content' }}>
         <button style={tabStyle(tab === 'dojangs')} onClick={() => setTab('dojangs')}>
           🏠 도장 관리
         </button>
-        <button style={tabStyle(tab === 'submanagers')} onClick={() => setTab('submanagers')}>
-          👤 부관리자
-        </button>
+        {isRoot && (
+          <button style={tabStyle(tab === 'submanagers')} onClick={() => setTab('submanagers')}>
+            👤 부관리자
+          </button>
+        )}
       </div>
 
       {tab === 'dojangs' && <DojangTab />}
-      {tab === 'submanagers' && <SubManagerTab />}
+      {tab === 'submanagers' && isRoot && <SubManagerTab />}
     </div>
   )
 }
