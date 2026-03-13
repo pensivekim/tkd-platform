@@ -18,81 +18,46 @@ function LoginPageInner() {
     e.preventDefault()
     setError('')
     setIsLoading(true)
-
     try {
       const res = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
       })
-
       const data = await res.json()
-
-      if (!res.ok) {
-        setError(data.error ?? '로그인에 실패했습니다.')
-        return
-      }
-
+      if (!res.ok) { setError(data.error ?? '로그인에 실패했습니다.'); return }
       const redirect = searchParams.get('redirect')
-      if (redirect && redirect.startsWith('/')) {
-        router.push(redirect)
-      } else if (data.role === 'platform_manager') {
-        router.push('/admin')
-      } else {
-        router.push('/dashboard')
-      }
+      if (redirect && redirect.startsWith('/')) router.push(redirect)
+      else if (data.role === 'platform_manager') router.push('/admin')
+      else router.push('/dashboard')
     } catch (err) {
       captureException(err, { action: 'login' })
-      setError('서버와 통신 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.')
+      setError('서버와 통신 중 오류가 발생했습니다.')
     } finally {
       setIsLoading(false)
     }
   }
 
   return (
-    <div style={{
-      minHeight: '100vh',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      background: '#0A0A0F',
-      fontFamily: "'Outfit', system-ui, sans-serif",
-      padding: '0 16px',
-    }}>
-      <div style={{ width: '100%', maxWidth: 360 }}>
+    <div className="min-h-screen flex items-center justify-center bg-[#0A0A0F] px-4">
+      <div className="w-full max-w-sm">
         {/* 로고 */}
-        <div style={{ textAlign: 'center', marginBottom: 32 }}>
-          <div style={{ marginBottom: 12 }}>
-            <span style={{
-              fontFamily: "'Bebas Neue', sans-serif",
-              fontSize: 36,
-              letterSpacing: 4,
-              color: '#E9C46A',
-              lineHeight: 1,
-            }}>TKP</span>
-            <div style={{ fontSize: 11, color: '#404050', letterSpacing: 1, marginTop: 2 }}>DOJANGWAN</div>
+        <div className="text-center mb-8">
+          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-[#E63946] mb-4">
+            <span className="text-white font-black text-lg tracking-wider">TK</span>
           </div>
-          <h1 style={{ fontSize: 18, fontWeight: 700, color: '#F0F0F5', margin: '0 0 6px' }}>
-            {t('auth.loginTitle')}
-          </h1>
-          <p style={{ fontSize: 13, color: '#606070', margin: 0, wordBreak: 'keep-all' }}>
-            {t('auth.loginSubtitle')}
-          </p>
+          <h1 className="text-xl font-bold text-[#F0F0F5] mb-1">{t('auth.loginTitle')}</h1>
+          <p className="text-sm text-[#606070]" style={{ wordBreak: 'keep-all' }}>{t('auth.loginSubtitle')}</p>
         </div>
 
-        {/* 로그인 폼 */}
-        <form onSubmit={handleSubmit} style={{
-          background: '#0E0E18',
-          border: '1px solid rgba(255,255,255,0.07)',
-          borderRadius: 16,
-          padding: '28px 24px',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: 16,
-        }}>
+        {/* 폼 */}
+        <form
+          onSubmit={handleSubmit}
+          className="bg-[#0E0E18] border border-white/[0.07] rounded-2xl p-7 flex flex-col gap-4"
+        >
           <div>
-            <label htmlFor="email" style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#909098', marginBottom: 6 }}>
-              {t('auth.email')} <span style={{ color: '#E63946' }}>*</span>
+            <label htmlFor="email" className="block text-xs font-semibold text-[#909098] mb-2">
+              {t('auth.email')} <span className="text-[#E63946]">*</span>
             </label>
             <input
               id="email"
@@ -103,25 +68,13 @@ function LoginPageInner() {
               onChange={(e) => setEmail(e.target.value)}
               disabled={isLoading}
               placeholder="example@dojang.com"
-              style={{
-                width: '100%',
-                padding: '10px 12px',
-                background: 'rgba(255,255,255,0.04)',
-                border: '1px solid rgba(255,255,255,0.1)',
-                borderRadius: 8,
-                fontSize: 14,
-                color: '#F0F0F5',
-                outline: 'none',
-                boxSizing: 'border-box',
-              }}
-              onFocus={e => { e.target.style.borderColor = '#E63946'; e.target.style.boxShadow = '0 0 0 2px rgba(230,57,70,0.2)' }}
-              onBlur={e => { e.target.style.borderColor = 'rgba(255,255,255,0.1)'; e.target.style.boxShadow = 'none' }}
+              className="w-full px-3 py-2.5 bg-white/[0.04] border border-white/[0.1] rounded-lg text-sm text-[#F0F0F5] placeholder:text-[#404050] focus:outline-none focus:border-[#E63946] focus:ring-2 focus:ring-[#E63946]/20 disabled:opacity-50 transition-colors"
             />
           </div>
 
           <div>
-            <label htmlFor="password" style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#909098', marginBottom: 6 }}>
-              {t('auth.password')} <span style={{ color: '#E63946' }}>*</span>
+            <label htmlFor="password" className="block text-xs font-semibold text-[#909098] mb-2">
+              {t('auth.password')} <span className="text-[#E63946]">*</span>
             </label>
             <input
               id="password"
@@ -132,34 +85,12 @@ function LoginPageInner() {
               onChange={(e) => setPassword(e.target.value)}
               disabled={isLoading}
               placeholder="••••••••"
-              style={{
-                width: '100%',
-                padding: '10px 12px',
-                background: 'rgba(255,255,255,0.04)',
-                border: '1px solid rgba(255,255,255,0.1)',
-                borderRadius: 8,
-                fontSize: 14,
-                color: '#F0F0F5',
-                outline: 'none',
-                boxSizing: 'border-box',
-              }}
-              onFocus={e => { e.target.style.borderColor = '#E63946'; e.target.style.boxShadow = '0 0 0 2px rgba(230,57,70,0.2)' }}
-              onBlur={e => { e.target.style.borderColor = 'rgba(255,255,255,0.1)'; e.target.style.boxShadow = 'none' }}
+              className="w-full px-3 py-2.5 bg-white/[0.04] border border-white/[0.1] rounded-lg text-sm text-[#F0F0F5] placeholder:text-[#404050] focus:outline-none focus:border-[#E63946] focus:ring-2 focus:ring-[#E63946]/20 disabled:opacity-50 transition-colors"
             />
           </div>
 
-          {/* 에러 메시지 */}
           {error && (
-            <p style={{
-              fontSize: 13,
-              color: '#E63946',
-              background: 'rgba(230,57,70,0.08)',
-              border: '1px solid rgba(230,57,70,0.2)',
-              borderRadius: 8,
-              padding: '10px 12px',
-              margin: 0,
-              wordBreak: 'keep-all',
-            }}>
+            <p className="text-sm text-[#E63946] bg-[#E63946]/[0.08] border border-[#E63946]/20 rounded-lg px-3 py-2.5" style={{ wordBreak: 'keep-all' }}>
               {error}
             </p>
           )}
@@ -167,43 +98,16 @@ function LoginPageInner() {
           <button
             type="submit"
             disabled={isLoading}
-            style={{
-              width: '100%',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: 8,
-              padding: '12px',
-              background: isLoading ? 'rgba(230,57,70,0.4)' : '#E63946',
-              color: '#fff',
-              fontSize: 14,
-              fontWeight: 700,
-              borderRadius: 10,
-              border: 'none',
-              cursor: isLoading ? 'not-allowed' : 'pointer',
-              transition: 'background 0.15s',
-              marginTop: 4,
-            }}
+            className="w-full flex items-center justify-center gap-2 py-3 bg-[#E63946] hover:bg-[#C53030] disabled:opacity-50 text-white text-sm font-bold rounded-xl transition-colors cursor-pointer border-none mt-1"
           >
-            {isLoading ? (
-              <>
-                <span style={{
-                  width: 16, height: 16,
-                  border: '2px solid rgba(255,255,255,0.3)',
-                  borderTopColor: '#fff',
-                  borderRadius: '50%',
-                  display: 'inline-block',
-                  animation: 'spin 0.7s linear infinite',
-                }} />
-                {t('auth.loggingIn')}
-              </>
-            ) : (
-              t('auth.login')
+            {isLoading && (
+              <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
             )}
+            {isLoading ? t('auth.loggingIn') : t('auth.login')}
           </button>
         </form>
 
-        <p style={{ marginTop: 24, textAlign: 'center', fontSize: 11, color: '#303040' }}>
+        <p className="mt-6 text-center text-xs text-[#303040]">
           &copy; 2025 Genomic Inc. All rights reserved.
         </p>
       </div>

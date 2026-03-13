@@ -9,17 +9,25 @@ import EmptyState from '@/components/ui/EmptyState'
 import ErrorMessage from '@/components/ui/ErrorMessage'
 import CoachingModal from '@/components/coaching/CoachingModal'
 import type { CoachingSession } from '@/types/coaching'
+import { Plus, Video, Link2, Trash2, RefreshCw } from 'lucide-react'
 
 type StatusFilter = 'all' | 'waiting' | 'active' | 'ended'
 
-const STATUS_LABEL_KEYS: Record<string, string> = { waiting: 'coaching.pending', active: 'coaching.active', ended: 'coaching.completed' }
-const STATUS_COLOR: Record<string, string>  = {
-  waiting: 'bg-yellow-100 text-yellow-700',
-  active:  'bg-green-100  text-green-700',
-  ended:   'bg-gray-100   text-gray-500',
+const STATUS_LABEL_KEYS: Record<string, string> = {
+  waiting: 'coaching.pending',
+  active:  'coaching.active',
+  ended:   'coaching.completed',
 }
-const TYPE_LABEL_KEYS: Record<string, string> = { individual: 'coaching.individual', group: 'coaching.group' }
-const FILTER_TAB_DEFS: { id: StatusFilter; tKey: string }[] = [
+const STATUS_COLOR: Record<string, string> = {
+  waiting: 'bg-yellow-500/15 text-yellow-400',
+  active:  'bg-green-500/15 text-green-400',
+  ended:   'bg-white/[0.06] text-[#606070]',
+}
+const TYPE_LABEL_KEYS: Record<string, string> = {
+  individual: 'coaching.individual',
+  group:      'coaching.group',
+}
+const FILTER_TABS: { id: StatusFilter; tKey: string }[] = [
   { id: 'all',     tKey: 'coaching.all' },
   { id: 'waiting', tKey: 'coaching.pending' },
   { id: 'active',  tKey: 'coaching.active' },
@@ -79,9 +87,9 @@ export default function CoachingPage() {
     setReopeningId(session.id)
     try {
       const res  = await fetch(`/api/coaching/${session.id}`, {
-        method:  'PATCH',
+        method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ status: 'waiting' }),
+        body: JSON.stringify({ status: 'waiting' }),
       })
       if (!res.ok) throw new Error()
       const data = await res.json()
@@ -109,26 +117,26 @@ export default function CoachingPage() {
   return (
     <div>
       <div className="flex items-center justify-between mb-5">
-        <h1 className="text-xl font-bold text-gray-900">{t('dash.nav.coaching')}</h1>
+        <h1 className="text-xl font-bold text-[#F0F0F5]">{t('dash.nav.coaching')}</h1>
         <button
           onClick={() => setShowModal(true)}
-          className="flex items-center gap-1.5 px-4 py-2.5 bg-red-600 text-white text-sm font-semibold rounded-lg hover:bg-red-700 transition-colors"
+          className="flex items-center gap-1.5 px-4 py-2 bg-[#E63946] hover:bg-[#C53030] text-white text-sm font-semibold rounded-xl transition-colors cursor-pointer border-none"
         >
-          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-          </svg>
+          <Plus size={15} strokeWidth={2.5} />
           {t('coaching.createSession')}
         </button>
       </div>
 
       {/* 필터 탭 */}
       <div className="flex gap-2 mb-5 flex-wrap">
-        {FILTER_TAB_DEFS.map((tab) => (
+        {FILTER_TABS.map((tab) => (
           <button
             key={tab.id}
             onClick={() => setFilter(tab.id)}
-            className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-              filter === tab.id ? 'bg-red-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+            className={`px-4 py-2 rounded-xl text-sm font-medium transition-colors cursor-pointer border-none ${
+              filter === tab.id
+                ? 'bg-[#E63946] text-white'
+                : 'bg-white/[0.05] text-[#909098] hover:bg-white/[0.09] hover:text-[#F0F0F5]'
             }`}
           >
             {t(tab.tKey)}
@@ -142,10 +150,11 @@ export default function CoachingPage() {
         <ErrorMessage message={error} retry={fetchSessions} />
       ) : filtered.length === 0 ? (
         <EmptyState
-          icon="🎯"
-          title={filter === 'all' ? t('coaching.noSessions') : `${t(STATUS_LABEL_KEYS[filter] ?? 'coaching.noSessions')} 세션이 없습니다`}
+          icon={<Video size={22} className="text-[#606070]" />}
+          title={filter === 'all' ? t('coaching.noSessions') : `${t(STATUS_LABEL_KEYS[filter] ?? '')} 세션이 없습니다`}
           description="원생과 1:1 또는 그룹으로 라이브 코칭을 진행하세요."
           ctaLabel={filter === 'all' ? t('coaching.createSession') : undefined}
+          onCta={filter === 'all' ? () => setShowModal(true) : undefined}
         />
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -157,75 +166,66 @@ export default function CoachingPage() {
             return (
               <div
                 key={session.id}
-                className={`bg-white rounded-2xl border border-gray-100 shadow-sm p-4 ${
+                className={`bg-[#0E0E18] border border-white/[0.07] rounded-2xl p-4 ${
                   isDeleting || isReopening ? 'opacity-50 pointer-events-none' : ''
-                } ${!isEnded ? 'cursor-pointer hover:shadow-md transition-shadow' : ''}`}
+                } ${!isEnded ? 'cursor-pointer hover:border-white/[0.12] transition-colors' : ''}`}
                 onClick={() => !isEnded && router.push(`/dashboard/coaching/${session.id}/coach`)}
               >
-                {/* 상단: 배지들 */}
-                <div className="flex items-center gap-2 mb-2 flex-wrap">
-                  <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${STATUS_COLOR[session.status] ?? 'bg-gray-100 text-gray-500'}`}>
+                {/* 배지 */}
+                <div className="flex items-center gap-2 mb-3 flex-wrap">
+                  <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${STATUS_COLOR[session.status] ?? 'bg-white/[0.06] text-[#606070]'}`}>
                     {t(STATUS_LABEL_KEYS[session.status] ?? 'coaching.active')}
                   </span>
-                  <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-indigo-100 text-indigo-700">
+                  <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-blue-500/15 text-blue-400">
                     {t(TYPE_LABEL_KEYS[session.type] ?? 'coaching.individual')}
                   </span>
-                  <span className="text-xs text-gray-400 ml-auto">최대 {session.max_participants}명</span>
+                  <span className="text-xs text-[#606070] ml-auto">최대 {session.max_participants}명</span>
                 </div>
 
-                {/* 제목 */}
-                <p className="font-semibold text-gray-900 text-sm mb-1 truncate" style={{ wordBreak: 'keep-all' }}>
+                <p className="font-semibold text-[#F0F0F5] text-sm mb-1 truncate" style={{ wordBreak: 'keep-all' }}>
                   {session.title}
                 </p>
                 {session.description && (
-                  <p className="text-xs text-gray-400 mb-2 truncate">{session.description}</p>
+                  <p className="text-xs text-[#606070] mb-1 truncate">{session.description}</p>
                 )}
-                <p className="text-xs text-gray-400 mb-3">
+                <p className="text-xs text-[#606070] mb-4">
                   {new Date(session.created_at).toLocaleDateString('ko-KR')}
                 </p>
 
-                {/* 버튼 영역 */}
+                {/* 버튼 */}
                 <div className="flex gap-2 flex-wrap" onClick={(e) => e.stopPropagation()}>
-                  {/* 입장 버튼 */}
                   {!isEnded && (
                     <button
                       onClick={() => router.push(`/dashboard/coaching/${session.id}/coach`)}
-                      className="flex-1 py-2 bg-red-600 text-white text-xs font-semibold rounded-lg hover:bg-red-700 transition-colors min-w-0"
+                      className="flex-1 py-2 bg-[#E63946] hover:bg-[#C53030] text-white text-xs font-semibold rounded-lg transition-colors cursor-pointer border-none"
                     >
                       입장
                     </button>
                   )}
-
-                  {/* 초대 링크 복사 */}
                   {!isEnded && (
                     <button
                       onClick={(e) => handleCopyInvite(session, e)}
-                      className="px-3 py-2 border border-gray-300 text-gray-600 text-xs rounded-lg hover:bg-gray-50 transition-colors"
+                      className="p-2 border border-white/[0.1] text-[#606070] hover:text-[#F0F0F5] hover:bg-white/[0.06] rounded-lg transition-colors cursor-pointer bg-transparent"
                       title="초대 링크 복사"
                     >
-                      {isCopied ? '✓' : '🔗'}
+                      <Link2 size={14} className={isCopied ? 'text-green-400' : ''} />
                     </button>
                   )}
-
-                  {/* 다시 열기 */}
                   {isEnded && (
                     <button
                       onClick={(e) => handleReopen(session, e)}
-                      className="flex-1 py-2 border border-yellow-300 text-yellow-700 text-xs font-medium rounded-lg hover:bg-yellow-50 transition-colors"
+                      className="flex-1 flex items-center justify-center gap-1.5 py-2 border border-yellow-500/20 text-yellow-400 text-xs font-medium rounded-lg hover:bg-yellow-500/10 transition-colors cursor-pointer bg-transparent"
                     >
+                      <RefreshCw size={12} className={isReopening ? 'animate-spin' : ''} />
                       {isReopening ? '처리 중...' : '다시 열기'}
                     </button>
                   )}
-
-                  {/* 삭제 */}
                   <button
                     onClick={(e) => handleDelete(session, e)}
-                    className="px-3 py-2 border border-red-200 text-red-400 text-xs rounded-lg hover:bg-red-50 transition-colors"
+                    className="p-2 border border-white/[0.1] text-[#606070] hover:text-[#E63946] hover:border-[#E63946]/20 hover:bg-[#E63946]/[0.08] rounded-lg transition-colors cursor-pointer bg-transparent"
                     title="삭제"
                   >
-                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                    </svg>
+                    <Trash2 size={14} />
                   </button>
                 </div>
               </div>
@@ -235,10 +235,7 @@ export default function CoachingPage() {
       )}
 
       {showModal && (
-        <CoachingModal
-          onClose={() => setShowModal(false)}
-          onSuccess={() => fetchSessions()}
-        />
+        <CoachingModal onClose={() => setShowModal(false)} onSuccess={fetchSessions} />
       )}
     </div>
   )

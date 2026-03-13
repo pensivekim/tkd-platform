@@ -9,16 +9,19 @@ import EmptyState from '@/components/ui/EmptyState'
 import ErrorMessage from '@/components/ui/ErrorMessage'
 import AlbumModal from '@/components/albums/AlbumModal'
 import type { Album } from '@/types/album'
+import { Plus, Images, Link2, Trash2, Image } from 'lucide-react'
 
 type Filter = 'all' | 'training' | 'competition'
 
-const TYPE_LABEL_KEYS: Record<string, string> = { training: 'album.training', competition: 'album.competition' }
-const TYPE_COLOR: Record<string, string> = {
-  training:    'bg-blue-100 text-blue-700',
-  competition: 'bg-orange-100 text-orange-700',
+const TYPE_LABEL_KEYS: Record<string, string> = {
+  training:    'album.training',
+  competition: 'album.competition',
 }
-
-const FILTER_TAB_DEFS: { id: Filter; tKey: string }[] = [
+const TYPE_COLOR: Record<string, string> = {
+  training:    'bg-blue-500/15 text-blue-400',
+  competition: 'bg-orange-500/15 text-orange-400',
+}
+const FILTER_TABS: { id: Filter; tKey: string }[] = [
   { id: 'all',         tKey: 'album.all' },
   { id: 'training',    tKey: 'album.training' },
   { id: 'competition', tKey: 'album.competition' },
@@ -90,28 +93,26 @@ export default function AlbumsPage() {
   return (
     <div>
       <div className="flex items-center justify-between mb-5">
-        <h1 className="text-xl font-bold text-gray-900">{t('dash.nav.albums')}</h1>
+        <h1 className="text-xl font-bold text-[#F0F0F5]">{t('dash.nav.albums')}</h1>
         <button
           onClick={() => setShowModal(true)}
-          className="flex items-center gap-1.5 px-4 py-2.5 bg-red-600 text-white text-sm font-semibold rounded-lg hover:bg-red-700 transition-colors"
+          className="flex items-center gap-1.5 px-4 py-2 bg-[#E63946] hover:bg-[#C53030] text-white text-sm font-semibold rounded-xl transition-colors cursor-pointer border-none"
         >
-          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-          </svg>
+          <Plus size={15} strokeWidth={2.5} />
           {t('album.createAlbum')}
         </button>
       </div>
 
       {/* 필터 탭 */}
-      <div className="flex gap-2 mb-5">
-        {FILTER_TAB_DEFS.map((tab) => (
+      <div className="flex gap-2 mb-5 flex-wrap">
+        {FILTER_TABS.map((tab) => (
           <button
             key={tab.id}
             onClick={() => setFilter(tab.id)}
-            className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+            className={`px-4 py-2 rounded-xl text-sm font-medium transition-colors cursor-pointer border-none ${
               filter === tab.id
-                ? 'bg-red-600 text-white'
-                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                ? 'bg-[#E63946] text-white'
+                : 'bg-white/[0.05] text-[#909098] hover:bg-white/[0.09] hover:text-[#F0F0F5]'
             }`}
           >
             {t(tab.tKey)}
@@ -119,18 +120,17 @@ export default function AlbumsPage() {
         ))}
       </div>
 
-      {/* 콘텐츠 */}
       {isLoading ? (
         <LoadingSpinner />
       ) : error ? (
         <ErrorMessage message={error} retry={fetchAlbums} />
       ) : filtered.length === 0 ? (
         <EmptyState
-          icon="📸"
+          icon={<Images size={22} className="text-[#606070]" />}
           title={filter === 'all' ? t('album.noAlbums') : `${t(TYPE_LABEL_KEYS[filter])} ${t('album.noAlbums')}`}
           description="훈련이나 대회 사진을 모아 학부모와 공유해보세요."
           ctaLabel={filter === 'all' ? t('album.createAlbum') : undefined}
-          ctaHref={undefined}
+          onCta={filter === 'all' ? () => setShowModal(true) : undefined}
         />
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -141,10 +141,10 @@ export default function AlbumsPage() {
               <div
                 key={album.id}
                 onClick={() => router.push(`/dashboard/albums/${album.id}`)}
-                className={`bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden cursor-pointer hover:shadow-md transition-shadow ${isDeleting ? 'opacity-50 pointer-events-none' : ''}`}
+                className={`bg-[#0E0E18] border border-white/[0.07] rounded-2xl overflow-hidden cursor-pointer hover:border-white/[0.12] transition-colors ${isDeleting ? 'opacity-50 pointer-events-none' : ''}`}
               >
-                {/* 커버 이미지 영역 */}
-                <div className="aspect-video bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center relative">
+                {/* 커버 이미지 */}
+                <div className="aspect-video bg-white/[0.04] flex items-center justify-center relative">
                   {album.cover_r2_key ? (
                     <img
                       src={`${process.env.NEXT_PUBLIC_PHOTOS_URL}/${album.cover_r2_key}`}
@@ -152,45 +152,43 @@ export default function AlbumsPage() {
                       className="w-full h-full object-cover"
                     />
                   ) : (
-                    <span className="text-4xl opacity-30">📸</span>
+                    <Image size={28} className="text-white/[0.12]" />
                   )}
 
                   {/* 유형 배지 */}
-                  <span className={`absolute top-2 left-2 px-2 py-0.5 rounded-full text-xs font-semibold ${TYPE_COLOR[album.type] ?? 'bg-gray-100 text-gray-600'}`}>
+                  <span className={`absolute top-2 left-2 px-2 py-0.5 rounded-full text-xs font-semibold ${TYPE_COLOR[album.type] ?? 'bg-white/[0.08] text-[#909098]'}`}>
                     {t(TYPE_LABEL_KEYS[album.type] ?? 'album.training')}
                   </span>
 
-                  {/* 우측 상단 액션 버튼 */}
+                  {/* 우측 액션 */}
                   <div className="absolute top-2 right-2 flex gap-1.5" onClick={(e) => e.stopPropagation()}>
                     {album.share_token && (
                       <button
                         onClick={(e) => handleCopyLink(album, e)}
-                        className="p-1.5 rounded-lg bg-white/90 text-gray-600 hover:bg-white shadow-sm text-sm"
-                        aria-label="공유 링크 복사"
+                        className="p-1.5 rounded-lg bg-black/50 backdrop-blur-sm text-white/70 hover:text-white transition-colors cursor-pointer border-none"
                         title="공유 링크 복사"
                       >
-                        {isCopied ? '✓' : '🔗'}
+                        <Link2 size={13} className={isCopied ? 'text-green-400' : ''} />
                       </button>
                     )}
                     <button
                       onClick={(e) => handleDelete(album, e)}
-                      className="p-1.5 rounded-lg bg-white/90 text-red-500 hover:bg-white shadow-sm"
-                      aria-label="앨범 삭제"
+                      className="p-1.5 rounded-lg bg-black/50 backdrop-blur-sm text-white/70 hover:text-[#E63946] transition-colors cursor-pointer border-none"
                       title="앨범 삭제"
                     >
-                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                      </svg>
+                      <Trash2 size={13} />
                     </button>
                   </div>
                 </div>
 
                 {/* 카드 하단 */}
                 <div className="p-3">
-                  <p className="font-semibold text-gray-900 text-sm truncate" style={{ wordBreak: 'keep-all' }}>{album.title}</p>
+                  <p className="font-semibold text-[#F0F0F5] text-sm truncate" style={{ wordBreak: 'keep-all' }}>
+                    {album.title}
+                  </p>
                   <div className="flex items-center justify-between mt-1">
-                    <span className="text-xs text-gray-400">{album.event_date}</span>
-                    <span className="text-xs text-gray-500">{t('album.photos')} {album.photo_count}</span>
+                    <span className="text-xs text-[#606070]">{album.event_date}</span>
+                    <span className="text-xs text-[#606070]">{t('album.photos')} {album.photo_count}</span>
                   </div>
                 </div>
               </div>
@@ -199,12 +197,8 @@ export default function AlbumsPage() {
         </div>
       )}
 
-      {/* 앨범 생성 모달 */}
       {showModal && (
-        <AlbumModal
-          onClose={() => setShowModal(false)}
-          onSuccess={fetchAlbums}
-        />
+        <AlbumModal onClose={() => setShowModal(false)} onSuccess={fetchAlbums} />
       )}
     </div>
   )

@@ -8,6 +8,7 @@ import EmptyState from '@/components/ui/EmptyState'
 import ErrorMessage from '@/components/ui/ErrorMessage'
 import NoticeModal from '@/components/notices/NoticeModal'
 import type { Notice } from '@/types/notice'
+import { Bell, Plus, Pin } from 'lucide-react'
 
 export default function NoticesPage() {
   const { t } = useI18n()
@@ -46,7 +47,7 @@ export default function NoticesPage() {
       setNotices((prev) => prev.filter((n) => n.id !== id))
     } catch (err) {
       captureException(err, { action: 'delete_notice', id })
-      alert('삭제에 실패했습니다. 다시 시도해주세요.')
+      alert('삭제에 실패했습니다.')
     } finally {
       setDeletingId(null)
     }
@@ -57,78 +58,77 @@ export default function NoticesPage() {
 
   return (
     <div>
-      {/* 헤더 */}
       <div className="flex items-center justify-between mb-5">
-        <h1 className="text-xl font-bold text-gray-900">{t('dash.nav.notices')}</h1>
+        <h1 className="text-xl font-bold text-[#F0F0F5]">{t('dash.nav.notices')}</h1>
         <button
           onClick={openCreate}
-          className="flex items-center gap-1.5 px-4 py-2 bg-red-600 text-white text-sm font-semibold rounded-lg hover:bg-red-700 transition-colors"
+          className="flex items-center gap-1.5 px-4 py-2 bg-[#E63946] hover:bg-[#C53030] text-white text-sm font-semibold rounded-xl transition-colors cursor-pointer border-none"
         >
-          <span>+</span> {t('dash.addNotice')}
+          <Plus size={15} strokeWidth={2.5} />
+          {t('dash.addNotice')}
         </button>
       </div>
 
-      {/* 본문 */}
       {isLoading ? (
         <LoadingSpinner />
       ) : error ? (
         <ErrorMessage message={error} retry={fetchNotices} />
       ) : notices.length === 0 ? (
         <EmptyState
-          icon="📢"
+          icon={<Bell size={22} className="text-[#606070]" />}
           title="등록된 공지사항이 없습니다"
           description="첫 번째 공지사항을 등록해보세요."
+          ctaLabel={t('dash.addNotice')}
+          onCta={openCreate}
         />
       ) : (
-        <div className="space-y-3">
+        <div className="space-y-2.5">
           {notices.map((notice) => (
             <div
               key={notice.id}
-              className={`bg-white rounded-2xl border shadow-sm p-4 md:p-5 ${
-                notice.is_pinned ? 'border-red-200 bg-red-50/30' : 'border-gray-100'
+              className={`rounded-2xl border p-4 md:p-5 ${
+                notice.is_pinned
+                  ? 'bg-[#E63946]/[0.05] border-[#E63946]/20'
+                  : 'bg-[#0E0E18] border-white/[0.07]'
               }`}
             >
-              {/* 제목 행 */}
               <div className="flex items-start justify-between gap-3 mb-2">
                 <div className="flex items-center gap-2 min-w-0">
                   {!!notice.is_pinned && (
-                    <span className="text-red-500 text-sm flex-shrink-0" aria-label="고정 공지">📌</span>
+                    <Pin size={13} className="text-[#E63946] flex-shrink-0" />
                   )}
                   <h3
-                    className="font-semibold text-gray-900 truncate"
+                    className="font-semibold text-[#F0F0F5] truncate"
                     style={{ wordBreak: 'keep-all' }}
                   >
                     {notice.title}
                   </h3>
                 </div>
-                {/* 액션 버튼 */}
                 <div className="flex items-center gap-2 flex-shrink-0">
                   <button
                     onClick={() => openEdit(notice)}
-                    className="text-xs px-3 py-1.5 border border-gray-200 rounded-lg text-gray-600 hover:bg-gray-100 transition-colors"
+                    className="text-xs px-3 py-1.5 border border-white/[0.1] rounded-lg text-[#909098] hover:bg-white/[0.06] hover:text-[#F0F0F5] transition-colors cursor-pointer bg-transparent"
                   >
                     {t('dash.edit')}
                   </button>
                   <button
                     onClick={() => handleDelete(notice.id)}
                     disabled={deletingId === notice.id}
-                    className="text-xs px-3 py-1.5 border border-red-200 rounded-lg text-red-500 hover:bg-red-50 transition-colors disabled:opacity-50"
+                    className="text-xs px-3 py-1.5 border border-[#E63946]/20 rounded-lg text-[#E63946]/70 hover:bg-[#E63946]/[0.08] hover:text-[#E63946] transition-colors disabled:opacity-40 cursor-pointer bg-transparent"
                   >
                     {t('dash.delete')}
                   </button>
                 </div>
               </div>
 
-              {/* 내용 미리보기 */}
               <p
-                className="text-sm text-gray-600 line-clamp-2 leading-relaxed"
+                className="text-sm text-[#909098] line-clamp-2 leading-relaxed"
                 style={{ wordBreak: 'keep-all' }}
               >
                 {notice.content}
               </p>
 
-              {/* 등록일 */}
-              <p className="text-xs text-gray-400 mt-2">
+              <p className="text-xs text-[#606070] mt-2">
                 {new Date(notice.created_at).toLocaleDateString('ko-KR', {
                   year: 'numeric', month: 'long', day: 'numeric',
                 })}
@@ -139,7 +139,6 @@ export default function NoticesPage() {
         </div>
       )}
 
-      {/* 모달 */}
       {showModal && (
         <NoticeModal
           notice={editingNotice}

@@ -10,14 +10,27 @@ import ErrorMessage from '@/components/ui/ErrorMessage'
 import type { Student } from '@/types/student'
 import type { AttendanceType } from '@/lib/constants'
 import type { Attendance } from '@/types/attendance'
+import { CalendarCheck, ChevronLeft, ChevronRight, Users } from 'lucide-react'
+import Link from 'next/link'
 
-// ATTENDANCE_TYPES 에서 AttendanceType 재정의 (타입 안전)
 type AType = typeof ATTENDANCE_TYPES[number]
 
 const TYPE_STYLE: Record<AType, { active: string; inactive: string; label: string }> = {
-  '출석': { active: 'bg-green-500 text-white border-green-500',  inactive: 'border-gray-200 text-gray-500 hover:bg-green-50 hover:border-green-300', label: '출석' },
-  '결석': { active: 'bg-red-500 text-white border-red-500',     inactive: 'border-gray-200 text-gray-500 hover:bg-red-50 hover:border-red-300',   label: '결석' },
-  '조퇴': { active: 'bg-yellow-400 text-white border-yellow-400', inactive: 'border-gray-200 text-gray-500 hover:bg-yellow-50 hover:border-yellow-300', label: '조퇴' },
+  '출석': {
+    active:   'bg-green-500 text-white border-transparent',
+    inactive: 'border-white/[0.08] text-[#606070] hover:bg-green-500/10 hover:border-green-500/30 hover:text-green-400',
+    label: '출석',
+  },
+  '결석': {
+    active:   'bg-[#E63946] text-white border-transparent',
+    inactive: 'border-white/[0.08] text-[#606070] hover:bg-[#E63946]/10 hover:border-[#E63946]/30 hover:text-[#E63946]',
+    label: '결석',
+  },
+  '조퇴': {
+    active:   'bg-yellow-500 text-white border-transparent',
+    inactive: 'border-white/[0.08] text-[#606070] hover:bg-yellow-500/10 hover:border-yellow-500/30 hover:text-yellow-400',
+    label: '조퇴',
+  },
 }
 
 const toDateStr = (d: Date) => d.toISOString().slice(0, 10)
@@ -33,7 +46,6 @@ export default function AttendancePage() {
   const [attendanceError, setAttendanceError] = useState<string | null>(null)
   const [pendingIds, setPendingIds] = useState<Set<string>>(new Set())
 
-  // 원생 목록 (최초 1회)
   const fetchStudents = useCallback(async () => {
     setIsLoadingStudents(true)
     setStudentsError(null)
@@ -50,7 +62,6 @@ export default function AttendancePage() {
     }
   }, [])
 
-  // 선택 날짜 출석 기록
   const fetchAttendance = useCallback(async (d: string) => {
     setIsLoadingAttendance(true)
     setAttendanceError(null)
@@ -74,30 +85,24 @@ export default function AttendancePage() {
   useEffect(() => { fetchStudents() }, [fetchStudents])
   useEffect(() => { fetchAttendance(date) }, [fetchAttendance, date])
 
-  // 날짜 이동
   const moveDate = (delta: number) => {
     const d = new Date(date)
     d.setDate(d.getDate() + delta)
     setDate(toDateStr(d))
   }
 
-  // 출석 체크 (낙관적 업데이트)
   async function handleCheck(studentId: string, type: AType) {
     if (pendingIds.has(studentId)) return
-
     const prev = attendanceMap.get(studentId)
 
-    // 같은 타입 클릭 → 삭제
     if (prev?.type === type) {
       setPendingIds((s) => new Set(s).add(studentId))
-      // 낙관적: 즉시 제거
       setAttendanceMap((m) => { const next = new Map(m); next.delete(studentId); return next })
       try {
         const res = await fetch(`/api/attendance/${prev.id}`, { method: 'DELETE' })
         if (!res.ok) throw new Error('삭제 실패')
       } catch (err) {
         captureException(err, { action: 'delete_attendance', id: prev.id })
-        // 실패 시 롤백
         setAttendanceMap((m) => new Map(m).set(studentId, prev))
       } finally {
         setPendingIds((s) => { const next = new Set(s); next.delete(studentId); return next })
@@ -105,7 +110,6 @@ export default function AttendancePage() {
       return
     }
 
-    // 새로 체크 or 변경 → 낙관적 업데이트
     const optimistic: Attendance = {
       id: prev?.id ?? '__optimistic__',
       dojang_id: '',
@@ -125,11 +129,9 @@ export default function AttendancePage() {
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error ?? '체크 실패')
-      // 실제 레코드로 교체
       setAttendanceMap((m) => new Map(m).set(studentId, data.attendance))
     } catch (err) {
       captureException(err, { action: 'check_attendance', studentId })
-      // 롤백
       setAttendanceMap((m) => {
         const next = new Map(m)
         if (prev) next.set(studentId, prev)
@@ -141,72 +143,60 @@ export default function AttendancePage() {
     }
   }
 
-  // 통계
   const stats = { '출석': 0, '결석': 0, '조퇴': 0 }
   for (const rec of attendanceMap.values()) {
     if (rec.type in stats) stats[rec.type as AType]++
   }
 
   const isToday = date === toDateStr(new Date())
-  const displayDate = new Date(date + 'T00:00:00').toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'short' })
+  const displayDate = new Date(date + 'T00:00:00').toLocaleDateString('ko-KR', {
+    year: 'numeric', month: 'long', day: 'numeric', weekday: 'short',
+  })
 
   return (
     <div>
-      {/* 헤더 */}
-      <h1 className="text-xl font-bold text-gray-900 mb-5">{t('dash.nav.attendance')}</h1>
+      <h1 className="text-xl font-bold text-[#F0F0F5] mb-5">{t('dash.nav.attendance')}</h1>
 
       {/* 날짜 선택 */}
-      <div className="flex items-center justify-between bg-white rounded-2xl border border-gray-100 shadow-sm px-4 py-3 mb-4">
+      <div className="flex items-center justify-between bg-[#0E0E18] border border-white/[0.07] rounded-2xl px-4 py-3 mb-4">
         <button
           onClick={() => moveDate(-1)}
-          className="p-2 rounded-lg text-gray-400 hover:bg-gray-100 transition-colors"
+          className="p-2 rounded-lg text-[#606070] hover:bg-white/[0.06] hover:text-[#F0F0F5] transition-colors cursor-pointer bg-transparent border-none"
           aria-label="전날"
         >
-          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-          </svg>
+          <ChevronLeft size={18} />
         </button>
-
         <div className="text-center">
-          <p className="font-semibold text-gray-900 text-sm">{displayDate}</p>
-          {isToday && (
-            <span className="text-xs text-red-500 font-medium">오늘</span>
-          )}
+          <p className="font-semibold text-[#F0F0F5] text-sm">{displayDate}</p>
+          {isToday && <span className="text-xs text-[#E63946] font-medium">오늘</span>}
         </div>
-
         <button
           onClick={() => moveDate(1)}
           disabled={isToday}
-          className="p-2 rounded-lg text-gray-400 hover:bg-gray-100 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+          className="p-2 rounded-lg text-[#606070] hover:bg-white/[0.06] hover:text-[#F0F0F5] transition-colors disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer bg-transparent border-none"
           aria-label="다음날"
         >
-          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-          </svg>
+          <ChevronRight size={18} />
         </button>
       </div>
 
       {/* 통계 */}
       <div className="grid grid-cols-3 gap-3 mb-5">
-        {(Object.entries(stats) as [AType, number][]).map(([type, count]) => (
-          <div key={type} className="bg-white rounded-xl border border-gray-100 shadow-sm p-3 text-center">
-            <p className="text-2xl font-extrabold text-gray-900">{count}</p>
-            <p className={`text-xs font-medium mt-0.5 ${
-              type === '출석' ? 'text-green-600' :
-              type === '결석' ? 'text-red-500' : 'text-yellow-500'
-            }`}>{type}</p>
+        {([['출석', 'text-green-400'], ['결석', 'text-[#E63946]'], ['조퇴', 'text-yellow-400']] as [AType, string][]).map(([type, color]) => (
+          <div key={type} className="bg-[#0E0E18] border border-white/[0.07] rounded-xl p-3 text-center">
+            <p className="text-2xl font-black text-[#F0F0F5]">{stats[type]}</p>
+            <p className={`text-xs font-medium mt-0.5 ${color}`}>{type}</p>
           </div>
         ))}
       </div>
 
-      {/* 원생 출석 목록 */}
       {isLoadingStudents ? (
         <LoadingSpinner />
       ) : studentsError ? (
         <ErrorMessage message={studentsError} retry={fetchStudents} />
       ) : students.length === 0 ? (
         <EmptyState
-          icon="👥"
+          icon={<Users size={22} className="text-[#606070]" />}
           title="등록된 원생이 없습니다"
           description="먼저 원생을 등록해주세요."
           ctaLabel="원생 등록하러 가기"
@@ -219,12 +209,7 @@ export default function AttendancePage() {
               <ErrorMessage message={attendanceError} retry={() => fetchAttendance(date)} />
             </div>
           )}
-
-          {isLoadingAttendance && (
-            <div className="mb-3">
-              <LoadingSpinner size="sm" />
-            </div>
-          )}
+          {isLoadingAttendance && <div className="mb-3"><LoadingSpinner size="sm" /></div>}
 
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
             {students.map((student) => {
@@ -234,17 +219,14 @@ export default function AttendancePage() {
               return (
                 <div
                   key={student.id}
-                  className={`bg-white rounded-2xl border border-gray-100 shadow-sm p-3 transition-opacity ${isPending ? 'opacity-60' : ''}`}
+                  className={`bg-[#0E0E18] border border-white/[0.07] rounded-2xl p-3 transition-opacity ${isPending ? 'opacity-50' : ''}`}
                 >
-                  {/* 원생 정보 */}
                   <div className="mb-3">
-                    <p className="font-semibold text-gray-900 text-sm truncate">{student.name}</p>
-                    <span className="inline-block mt-0.5 px-1.5 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-600">
+                    <p className="font-semibold text-[#F0F0F5] text-sm truncate">{student.name}</p>
+                    <span className="inline-block mt-0.5 px-1.5 py-0.5 rounded text-xs font-medium bg-white/[0.06] text-[#606070]">
                       {student.belt}
                     </span>
                   </div>
-
-                  {/* 출석 버튼 3개 */}
                   <div className="flex gap-1">
                     {ATTENDANCE_TYPES.map((type) => {
                       const isChecked = record?.type === type
@@ -254,7 +236,7 @@ export default function AttendancePage() {
                           key={type}
                           onClick={() => handleCheck(student.id, type)}
                           disabled={isPending}
-                          className={`flex-1 py-2.5 rounded-lg text-xs font-semibold border transition-colors ${
+                          className={`flex-1 py-2.5 rounded-lg text-xs font-semibold border transition-colors cursor-pointer ${
                             isChecked ? style.active : style.inactive
                           }`}
                         >
@@ -268,7 +250,7 @@ export default function AttendancePage() {
             })}
           </div>
 
-          <p className="mt-4 text-xs text-gray-400 text-right">
+          <p className="mt-4 text-xs text-[#606070] text-right">
             전체 {students.length}명 중 {attendanceMap.size}명 체크됨
           </p>
         </>

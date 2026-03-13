@@ -5,6 +5,7 @@ import { captureException } from '@/lib/sentry'
 import LoadingSpinner from '@/components/ui/LoadingSpinner'
 import ErrorMessage from '@/components/ui/ErrorMessage'
 import { useI18n } from '@/lib/i18n'
+import { Users, CalendarCheck, UserPlus, Bell } from 'lucide-react'
 
 interface Stats {
   totalStudents:      number
@@ -14,10 +15,10 @@ interface Stats {
 }
 
 const CARD_META = [
-  { key: 'totalStudents'      as const, tKey: 'dash.totalStudents',   unit: '명', icon: '👥', color: '#3B82F6' },
-  { key: 'todayAttendance'    as const, tKey: 'dash.todayAttendance', unit: '명', icon: '✅', color: '#4ade80' },
-  { key: 'monthlyNewStudents' as const, tKey: 'dash.students',        unit: '명', icon: '🆕', color: '#E9C46A' },
-  { key: 'totalNotices'       as const, tKey: 'dash.notices',         unit: '건', icon: '📢', color: '#E63946' },
+  { key: 'totalStudents'      as const, tKey: 'dash.totalStudents',   unit: '명', Icon: Users,         color: '#3B82F6' },
+  { key: 'todayAttendance'    as const, tKey: 'dash.todayAttendance', unit: '명', Icon: CalendarCheck, color: '#4ade80' },
+  { key: 'monthlyNewStudents' as const, tKey: 'dash.students',        unit: '명', Icon: UserPlus,      color: '#E9C46A' },
+  { key: 'totalNotices'       as const, tKey: 'dash.notices',         unit: '건', Icon: Bell,          color: '#E63946' },
 ]
 
 export default function DashboardPage() {
@@ -46,49 +47,38 @@ export default function DashboardPage() {
 
   return (
     <div>
-      <div style={{ marginBottom: 28 }}>
-        <h1 style={{ fontSize: 22, fontWeight: 700, color: '#F0F0F5', marginBottom: 4 }}>
-          {t('dash.nav.overview')}
-        </h1>
-        <p style={{ fontSize: 13, color: '#606070', wordBreak: 'keep-all' }}>
-          {t('dash.overview')}
-        </p>
+      <div className="mb-7">
+        <h1 className="text-xl font-bold text-[#F0F0F5] mb-1">{t('dash.nav.overview')}</h1>
+        <p className="text-sm text-[#606070]" style={{ wordBreak: 'keep-all' }}>{t('dash.overview')}</p>
       </div>
 
       {error ? (
         <ErrorMessage message={error} retry={fetchStats} />
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 12 }} className="md:grid-cols-4">
-          {CARD_META.map((card) => (
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          {CARD_META.map(({ key, tKey, unit, Icon, color }) => (
             <div
-              key={card.key}
-              style={{
-                background: '#0E0E18',
-                border: '1px solid rgba(255,255,255,0.07)',
-                borderRadius: 16,
-                padding: '20px 18px',
-              }}
+              key={key}
+              className="bg-[#0E0E18] border border-white/[0.07] rounded-2xl p-5"
             >
-              <div style={{
-                width: 40, height: 40, borderRadius: 10, marginBottom: 14,
-                background: `${card.color}18`,
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: 18,
-              }}>
-                {card.icon}
+              <div
+                className="w-10 h-10 rounded-xl flex items-center justify-center mb-4"
+                style={{ background: `${color}18` }}
+              >
+                <Icon size={18} style={{ color }} strokeWidth={2} />
               </div>
-              <p style={{ fontSize: 12, color: '#606070', marginBottom: 6, wordBreak: 'keep-all' }}>
-                {t(card.tKey)}
+              <p className="text-xs text-[#606070] mb-1.5" style={{ wordBreak: 'keep-all' }}>
+                {t(tKey)}
               </p>
-              <div style={{ display: 'flex', alignItems: 'baseline', gap: 4, minHeight: 32 }}>
+              <div className="flex items-baseline gap-1 min-h-8">
                 {isLoading ? (
                   <LoadingSpinner size="sm" />
                 ) : (
                   <>
-                    <span style={{ fontSize: 28, fontWeight: 900, color: card.color, fontFamily: "'Outfit', sans-serif" }}>
-                      {stats?.[card.key] ?? 0}
+                    <span className="text-3xl font-black tabular-nums" style={{ color }}>
+                      {stats?.[key] ?? 0}
                     </span>
-                    <span style={{ fontSize: 12, color: '#606070' }}>{card.unit}</span>
+                    <span className="text-xs text-[#606070]">{unit}</span>
                   </>
                 )}
               </div>

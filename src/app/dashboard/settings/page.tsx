@@ -9,6 +9,7 @@ import LoadingSpinner from '@/components/ui/LoadingSpinner'
 import ErrorMessage from '@/components/ui/ErrorMessage'
 import { subscribePush, unsubscribePush } from '@/lib/pushClient'
 import TeamSection from './TeamSection'
+import { Bell, BellOff, Check } from 'lucide-react'
 
 // ─── 타입 ───────────────────────────────────────────────────────────────────
 interface DojangInfo {
@@ -40,8 +41,8 @@ const PasswordSchema = z.object({
 // ─── 섹션 래퍼 ───────────────────────────────────────────────────────────────
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 md:p-6">
-      <h2 className="font-bold text-gray-900 mb-4">{title}</h2>
+    <div className="bg-[#0E0E18] border border-white/[0.07] rounded-2xl p-5 md:p-6">
+      <h2 className="font-bold text-[#F0F0F5] mb-5">{title}</h2>
       {children}
     </div>
   )
@@ -51,14 +52,15 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 function Field({ label, error, children }: { label: string; error?: string; children: React.ReactNode }) {
   return (
     <div>
-      <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
+      <label className="block text-xs font-semibold text-[#909098] mb-1.5">{label}</label>
       {children}
-      {error && <p className="text-xs text-red-500 mt-1">{error}</p>}
+      {error && <p className="text-xs text-[#E63946] mt-1">{error}</p>}
     </div>
   )
 }
 
-const inputCls = 'w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent disabled:bg-gray-50'
+const inputCls = 'w-full px-3 py-2.5 bg-white/[0.04] border border-white/[0.1] rounded-lg text-sm text-[#F0F0F5] placeholder:text-[#404050] focus:outline-none focus:border-[#E63946] focus:ring-2 focus:ring-[#E63946]/20 disabled:opacity-50 transition-colors'
+const selectCls = inputCls + ' [&>option]:bg-[#0E0E18]'
 
 // ─── 메인 페이지 ─────────────────────────────────────────────────────────────
 export default function SettingsPage() {
@@ -68,19 +70,16 @@ export default function SettingsPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [loadError, setLoadError] = useState<string | null>(null)
 
-  // 도장 정보 폼
   const [dojangForm, setDojangForm]     = useState({ name: '', owner_name: '', phone: '', address: '', region: '', city: '', description: '' })
   const [dojangErrors, setDojangErrors] = useState<Record<string, string>>({})
   const [dojangSaving, setDojangSaving] = useState(false)
   const [dojangMsg, setDojangMsg]       = useState('')
 
-  // 비밀번호 폼
   const [pwForm, setPwForm]     = useState({ current_password: '', new_password: '', confirm_password: '' })
   const [pwErrors, setPwErrors] = useState<Record<string, string>>({})
   const [pwSaving, setPwSaving] = useState(false)
   const [pwMsg, setPwMsg]       = useState('')
 
-  // 푸시 알림 상태
   const [pushStatus, setPushStatus] = useState<'idle' | 'granted' | 'denied' | 'loading'>('idle')
 
   useEffect(() => {
@@ -100,21 +99,20 @@ export default function SettingsPage() {
     }
   }
 
-  // 요금제 정보 (번역)
   const PLAN_INFO = {
     free:  {
       label: t('settings.plan.free'),
-      color: 'bg-gray-100 text-gray-700',
+      color: 'bg-white/[0.06] text-[#909098]',
       features: [t('settings.plan.free') + ' · 30명', t('dash.attendance'), t('dash.notices') + ' 5'],
     },
     basic: {
       label: t('settings.plan.basic'),
-      color: 'bg-blue-100 text-blue-700',
+      color: 'bg-blue-500/15 text-blue-400',
       features: ['100' + t('dash.students'), t('dash.attendance'), t('dash.notices'), 'SMS'],
     },
     pro: {
       label: t('settings.plan.pro'),
-      color: 'bg-red-100 text-red-700',
+      color: 'bg-[#E63946]/15 text-[#E63946]',
       features: [t('dash.students'), t('dash.attendance'), t('dash.notices'), 'SMS', t('dash.nav.poomsaeAdmin'), t('training.title')],
     },
   }
@@ -147,11 +145,9 @@ export default function SettingsPage() {
 
   useEffect(() => { loadSettings() }, [])
 
-  // ── 도장 정보 저장 ──────────────────────────────────────────────────────────
   async function handleDojangSave(e: FormEvent) {
     e.preventDefault()
     setDojangMsg('')
-
     const parsed = DojangSchema.safeParse(dojangForm)
     if (!parsed.success) {
       const errs: Record<string, string> = {}
@@ -181,11 +177,9 @@ export default function SettingsPage() {
     }
   }
 
-  // ── 비밀번호 변경 ───────────────────────────────────────────────────────────
   async function handlePasswordChange(e: FormEvent) {
     e.preventDefault()
     setPwMsg('')
-
     const parsed = PasswordSchema.safeParse(pwForm)
     if (!parsed.success) {
       const errs: Record<string, string> = {}
@@ -202,10 +196,7 @@ export default function SettingsPage() {
       const res  = await fetch('/api/settings/password', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          current_password: parsed.data.current_password,
-          new_password:     parsed.data.new_password,
-        }),
+        body: JSON.stringify({ current_password: parsed.data.current_password, new_password: parsed.data.new_password }),
       })
       const data = await res.json()
       if (!res.ok) { setPwMsg(data.error ?? t('settings.saveFail')); return }
@@ -219,16 +210,10 @@ export default function SettingsPage() {
     }
   }
 
-  // ── 렌더 ────────────────────────────────────────────────────────────────────
-  if (isLoading) return (
-    <div className="flex justify-center py-20">
-      <LoadingSpinner size="lg" />
-    </div>
-  )
-
+  if (isLoading) return <div className="flex justify-center py-20"><LoadingSpinner size="lg" /></div>
   if (loadError) return (
     <div>
-      <h1 className="text-xl font-bold text-gray-900 mb-6">{t('dash.nav.settings')}</h1>
+      <h1 className="text-xl font-bold text-[#F0F0F5] mb-6">{t('dash.nav.settings')}</h1>
       <ErrorMessage message={loadError} retry={loadSettings} />
     </div>
   )
@@ -237,96 +222,46 @@ export default function SettingsPage() {
   const planInfo = PLAN_INFO[plan] ?? PLAN_INFO.free
 
   return (
-    <div className="space-y-6">
-      <h1 className="text-xl font-bold text-gray-900">{t('dash.nav.settings')}</h1>
+    <div className="space-y-5">
+      <h1 className="text-xl font-bold text-[#F0F0F5]">{t('dash.nav.settings')}</h1>
 
-      {/* ── 섹션 1: 도장 기본 정보 ── */}
+      {/* 섹션 1: 도장 기본 정보 */}
       <Section title={t('settings.dojangInfo')}>
         <form onSubmit={handleDojangSave} className="space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Field label={`${t('settings.dojangName')} *`} error={dojangErrors.name}>
-              <input
-                type="text"
-                value={dojangForm.name}
-                onChange={(e) => setDojangForm((p) => ({ ...p, name: e.target.value }))}
-                disabled={dojangSaving}
-                className={inputCls}
-              />
+              <input type="text" value={dojangForm.name} onChange={(e) => setDojangForm((p) => ({ ...p, name: e.target.value }))} disabled={dojangSaving} className={inputCls} />
             </Field>
             <Field label={`${t('settings.ownerName')} *`} error={dojangErrors.owner_name}>
-              <input
-                type="text"
-                value={dojangForm.owner_name}
-                onChange={(e) => setDojangForm((p) => ({ ...p, owner_name: e.target.value }))}
-                disabled={dojangSaving}
-                className={inputCls}
-              />
+              <input type="text" value={dojangForm.owner_name} onChange={(e) => setDojangForm((p) => ({ ...p, owner_name: e.target.value }))} disabled={dojangSaving} className={inputCls} />
             </Field>
             <Field label={t('settings.phone')} error={dojangErrors.phone}>
-              <input
-                type="tel"
-                value={dojangForm.phone}
-                onChange={(e) => setDojangForm((p) => ({ ...p, phone: e.target.value }))}
-                disabled={dojangSaving}
-                className={inputCls}
-              />
+              <input type="tel" value={dojangForm.phone} onChange={(e) => setDojangForm((p) => ({ ...p, phone: e.target.value }))} disabled={dojangSaving} className={inputCls} />
             </Field>
             <Field label={t('settings.region')} error={dojangErrors.region}>
-              <select
-                value={dojangForm.region}
-                onChange={(e) => setDojangForm((p) => ({ ...p, region: e.target.value }))}
-                disabled={dojangSaving}
-                className={inputCls}
-              >
+              <select value={dojangForm.region} onChange={(e) => setDojangForm((p) => ({ ...p, region: e.target.value }))} disabled={dojangSaving} className={selectCls}>
                 <option value="">{t('auth.selectRegion')}</option>
-                {REGION_LIST.map((r) => (
-                  <option key={r} value={r}>{r}</option>
-                ))}
+                {REGION_LIST.map((r) => <option key={r} value={r}>{r}</option>)}
               </select>
             </Field>
             <Field label={t('settings.cityDistrict')} error={dojangErrors.city}>
-              <input
-                type="text"
-                value={dojangForm.city}
-                onChange={(e) => setDojangForm((p) => ({ ...p, city: e.target.value }))}
-                disabled={dojangSaving}
-                className={inputCls}
-              />
+              <input type="text" value={dojangForm.city} onChange={(e) => setDojangForm((p) => ({ ...p, city: e.target.value }))} disabled={dojangSaving} className={inputCls} />
             </Field>
           </div>
-
           <Field label={t('settings.address')} error={dojangErrors.address}>
-            <input
-              type="text"
-              value={dojangForm.address}
-              onChange={(e) => setDojangForm((p) => ({ ...p, address: e.target.value }))}
-              disabled={dojangSaving}
-              className={inputCls}
-            />
+            <input type="text" value={dojangForm.address} onChange={(e) => setDojangForm((p) => ({ ...p, address: e.target.value }))} disabled={dojangSaving} className={inputCls} />
           </Field>
-
           <Field label={t('settings.dojangDesc')} error={dojangErrors.description}>
-            <textarea
-              value={dojangForm.description}
-              onChange={(e) => setDojangForm((p) => ({ ...p, description: e.target.value }))}
-              rows={3}
-              disabled={dojangSaving}
-              className={`${inputCls} resize-none`}
-            />
+            <textarea value={dojangForm.description} onChange={(e) => setDojangForm((p) => ({ ...p, description: e.target.value }))} rows={3} disabled={dojangSaving} className={`${inputCls} resize-none`} />
           </Field>
 
           {dojangMsg && (
-            <p className={`text-sm px-3 py-2 rounded-lg ${dojangMsg.startsWith('✓') ? 'text-green-700 bg-green-50' : 'text-red-600 bg-red-50'}`}>
+            <p className={`text-sm px-3 py-2 rounded-lg ${dojangMsg.startsWith('✓') ? 'text-green-400 bg-green-500/[0.08] border border-green-500/20' : 'text-[#E63946] bg-[#E63946]/[0.08] border border-[#E63946]/20'}`}>
               {dojangMsg}
             </p>
           )}
-
           <div className="flex justify-end">
-            <button
-              type="submit"
-              disabled={dojangSaving}
-              className="flex items-center gap-2 px-5 py-2.5 bg-red-600 text-white text-sm font-semibold rounded-lg hover:bg-red-700 transition-colors disabled:opacity-60"
-            >
+            <button type="submit" disabled={dojangSaving} className="flex items-center gap-2 px-5 py-2.5 bg-[#E63946] hover:bg-[#C53030] text-white text-sm font-semibold rounded-xl transition-colors disabled:opacity-50 cursor-pointer border-none">
               {dojangSaving && <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />}
               {t('settings.save')}
             </button>
@@ -334,68 +269,40 @@ export default function SettingsPage() {
         </form>
       </Section>
 
-      {/* ── 섹션 2: 계정 정보 ── */}
+      {/* 섹션 2: 계정 정보 */}
       <Section title={t('settings.accountInfo')}>
-        {/* 읽기 전용 계정 정보 */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6 pb-6 border-b border-gray-100">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6 pb-6 border-b border-white/[0.06]">
           <div>
-            <p className="text-xs text-gray-500 mb-1">{t('settings.name')}</p>
-            <p className="text-sm font-medium text-gray-900">{user?.name ?? '-'}</p>
+            <p className="text-xs text-[#606070] mb-1">{t('settings.name')}</p>
+            <p className="text-sm font-medium text-[#F0F0F5]">{user?.name ?? '-'}</p>
           </div>
           <div>
-            <p className="text-xs text-gray-500 mb-1">{t('settings.email')}</p>
-            <p className="text-sm font-medium text-gray-900">{user?.email ?? '-'}</p>
+            <p className="text-xs text-[#606070] mb-1">{t('settings.email')}</p>
+            <p className="text-sm font-medium text-[#F0F0F5]">{user?.email ?? '-'}</p>
           </div>
         </div>
 
-        {/* 비밀번호 변경 */}
-        <p className="text-sm font-semibold text-gray-700 mb-3">{t('settings.changePassword')}</p>
+        <p className="text-sm font-semibold text-[#909098] mb-3">{t('settings.changePassword')}</p>
         <form onSubmit={handlePasswordChange} className="space-y-4">
           <Field label={t('settings.currentPassword')} error={pwErrors.current_password}>
-            <input
-              type="password"
-              value={pwForm.current_password}
-              onChange={(e) => setPwForm((p) => ({ ...p, current_password: e.target.value }))}
-              disabled={pwSaving}
-              className={inputCls}
-              autoComplete="current-password"
-            />
+            <input type="password" value={pwForm.current_password} onChange={(e) => setPwForm((p) => ({ ...p, current_password: e.target.value }))} disabled={pwSaving} className={inputCls} autoComplete="current-password" />
           </Field>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Field label={t('settings.newPassword')} error={pwErrors.new_password}>
-              <input
-                type="password"
-                value={pwForm.new_password}
-                onChange={(e) => setPwForm((p) => ({ ...p, new_password: e.target.value }))}
-                disabled={pwSaving}
-                className={inputCls}
-                autoComplete="new-password"
-              />
+              <input type="password" value={pwForm.new_password} onChange={(e) => setPwForm((p) => ({ ...p, new_password: e.target.value }))} disabled={pwSaving} className={inputCls} autoComplete="new-password" />
             </Field>
             <Field label={t('settings.confirmNewPassword')} error={pwErrors.confirm_password}>
-              <input
-                type="password"
-                value={pwForm.confirm_password}
-                onChange={(e) => setPwForm((p) => ({ ...p, confirm_password: e.target.value }))}
-                disabled={pwSaving}
-                className={inputCls}
-                autoComplete="new-password"
-              />
+              <input type="password" value={pwForm.confirm_password} onChange={(e) => setPwForm((p) => ({ ...p, confirm_password: e.target.value }))} disabled={pwSaving} className={inputCls} autoComplete="new-password" />
             </Field>
           </div>
 
           {pwMsg && (
-            <p className={`text-sm px-3 py-2 rounded-lg ${pwMsg.startsWith('✓') ? 'text-green-700 bg-green-50' : 'text-red-600 bg-red-50'}`}>
+            <p className={`text-sm px-3 py-2 rounded-lg ${pwMsg.startsWith('✓') ? 'text-green-400 bg-green-500/[0.08] border border-green-500/20' : 'text-[#E63946] bg-[#E63946]/[0.08] border border-[#E63946]/20'}`}>
               {pwMsg}
             </p>
           )}
-
           <div className="flex justify-end">
-            <button
-              type="submit"
-              disabled={pwSaving}
-              className="flex items-center gap-2 px-5 py-2.5 bg-gray-800 text-white text-sm font-semibold rounded-lg hover:bg-gray-900 transition-colors disabled:opacity-60"
-            >
+            <button type="submit" disabled={pwSaving} className="flex items-center gap-2 px-5 py-2.5 bg-white/[0.08] hover:bg-white/[0.12] text-[#F0F0F5] text-sm font-semibold rounded-xl transition-colors disabled:opacity-50 cursor-pointer border-none">
               {pwSaving && <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />}
               {t('settings.changePassword')}
             </button>
@@ -403,65 +310,68 @@ export default function SettingsPage() {
         </form>
       </Section>
 
-      {/* ── 섹션 3: 푸시 알림 ── */}
+      {/* 섹션 3: 푸시 알림 */}
       <Section title="푸시 알림">
-        <p className="text-sm text-gray-500 mb-4" style={{ wordBreak: 'keep-all' }}>
-          출석 체크 시 학부모 기기에 알림을 보내거나, 공지사항 등록 시 구독자 전체에게 알림을 발송합니다.<br />
+        <p className="text-sm text-[#606070] mb-4 leading-relaxed" style={{ wordBreak: 'keep-all' }}>
+          출석 체크 시 학부모 기기에 알림을 보내거나, 공지사항 등록 시 구독자 전체에게 알림을 발송합니다.
           이 기기에서 알림을 허용하면 도장 구독자로 등록됩니다.
         </p>
-        <div className="flex items-center gap-4 flex-wrap">
+        <div className="flex items-center gap-3 flex-wrap">
           <button
             onClick={handlePushToggle}
             disabled={pushStatus === 'loading' || pushStatus === 'denied'}
-            className={`flex items-center gap-2 px-5 py-2.5 text-sm font-semibold rounded-lg transition-colors disabled:opacity-50 ${
+            className={`flex items-center gap-2 px-5 py-2.5 text-sm font-semibold rounded-xl transition-colors disabled:opacity-50 cursor-pointer border-none ${
               pushStatus === 'granted'
-                ? 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                : 'bg-red-600 text-white hover:bg-red-700'
+                ? 'bg-white/[0.08] text-[#909098] hover:bg-white/[0.12]'
+                : 'bg-[#E63946] text-white hover:bg-[#C53030]'
             }`}
           >
             {pushStatus === 'loading' && <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />}
-            {pushStatus === 'granted' ? '🔔 알림 구독 중 (해제하기)' : pushStatus === 'denied' ? '🚫 알림 차단됨 (브라우저 설정에서 허용)' : '🔔 알림 허용하기'}
+            {pushStatus === 'granted' ? <BellOff size={15} /> : <Bell size={15} />}
+            {pushStatus === 'granted' ? '알림 구독 중 (해제)' : pushStatus === 'denied' ? '알림 차단됨 (브라우저 설정에서 허용)' : '알림 허용하기'}
           </button>
           {pushStatus === 'granted' && (
-            <span className="text-xs text-green-600 bg-green-50 px-3 py-1.5 rounded-full">
-              ✓ 출석 알림 · 공지 알림 수신 중
+            <span className="flex items-center gap-1.5 text-xs text-green-400 bg-green-500/[0.08] border border-green-500/20 px-3 py-1.5 rounded-full">
+              <Check size={12} /> 출석 알림 · 공지 알림 수신 중
             </span>
           )}
         </div>
       </Section>
 
-      {/* ── 섹션 4: 팀 관리 ── */}
+      {/* 섹션 4: 팀 관리 */}
       <TeamSection />
 
-      {/* ── 섹션 5: 요금제 안내 ── */}
+      {/* 섹션 5: 요금제 안내 */}
       <Section title={t('settings.planInfo')}>
-        {/* 현재 플랜 배지 */}
         <div className="flex items-center gap-3 mb-5">
           <span className={`px-3 py-1 rounded-full text-sm font-semibold ${planInfo.color}`}>
             {planInfo.label}
           </span>
-          <span className="text-sm text-gray-500">{t('settings.inUse')}</span>
+          <span className="text-sm text-[#606070]">{t('settings.inUse')}</span>
         </div>
 
-        {/* 플랜 비교 카드 */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-5">
           {(Object.entries(PLAN_INFO) as [keyof typeof PLAN_INFO, typeof PLAN_INFO[keyof typeof PLAN_INFO]][]).map(([key, info]) => (
             <div
               key={key}
-              className={`rounded-xl border p-4 ${plan === key ? 'border-red-300 bg-red-50/30' : 'border-gray-100 bg-gray-50'}`}
+              className={`rounded-xl border p-4 ${
+                plan === key
+                  ? 'border-[#E63946]/30 bg-[#E63946]/[0.05]'
+                  : 'border-white/[0.07] bg-white/[0.02]'
+              }`}
             >
               <div className="flex items-center justify-between mb-3">
-                <span className={`text-sm font-bold ${plan === key ? 'text-red-700' : 'text-gray-700'}`}>
+                <span className={`text-sm font-bold ${plan === key ? 'text-[#E63946]' : 'text-[#909098]'}`}>
                   {info.label}
                 </span>
                 {plan === key && (
-                  <span className="text-xs px-2 py-0.5 bg-red-600 text-white rounded-full">{t('settings.currentBadge')}</span>
+                  <span className="text-[10px] px-2 py-0.5 bg-[#E63946] text-white rounded-full font-semibold">{t('settings.currentBadge')}</span>
                 )}
               </div>
               <ul className="space-y-1">
                 {info.features.map((f) => (
-                  <li key={f} className="text-xs text-gray-600 flex items-center gap-1.5">
-                    <span className="text-green-500">✓</span> {f}
+                  <li key={f} className="text-xs text-[#606070] flex items-center gap-1.5">
+                    <Check size={11} className="text-green-400 flex-shrink-0" /> {f}
                   </li>
                 ))}
               </ul>
@@ -472,7 +382,7 @@ export default function SettingsPage() {
         {plan !== 'pro' && (
           <a
             href="mailto:admin@genomic.cc?subject=Taekwondo Platform upgrade inquiry"
-            className="inline-flex items-center gap-2 px-5 py-2.5 bg-red-600 text-white text-sm font-semibold rounded-lg hover:bg-red-700 transition-colors"
+            className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#E63946] hover:bg-[#C53030] text-white text-sm font-semibold rounded-xl transition-colors no-underline"
           >
             {t('settings.upgradeInquiry')}
           </a>
