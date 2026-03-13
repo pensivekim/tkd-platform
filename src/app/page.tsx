@@ -140,7 +140,7 @@ export default function LandingPage() {
           {/* headline */}
           <h1
             className="font-black tracking-tight leading-[1.05] mb-5"
-            style={{ fontSize: 'clamp(2.8rem, 8vw, 5rem)', wordBreak: 'keep-all' }}
+            style={{ fontSize: 'clamp(2.2rem, 6vw, 3.8rem)', wordBreak: 'keep-all' }}
           >
             <span className="text-white">{t('landing.heroH1a')}</span>
             <br />
@@ -150,8 +150,8 @@ export default function LandingPage() {
           </h1>
 
           <p
-            className="text-white/45 text-base md:text-lg mb-10 max-w-lg mx-auto leading-relaxed"
-            style={{ wordBreak: 'keep-all' }}
+            className="text-white/45 mb-10 max-w-lg mx-auto leading-relaxed"
+            style={{ fontSize: 15, wordBreak: 'keep-all' }}
           >
             {t('landing.heroSub')}
           </p>
@@ -202,7 +202,7 @@ export default function LandingPage() {
           {t('landing.featuresLabel')}
         </p>
         <h2
-          className="text-3xl md:text-4xl font-bold text-center mb-14"
+          className="text-2xl md:text-[28px] font-bold text-center mb-14"
           style={{ wordBreak: 'keep-all' }}
         >
           {t('landing.featuresTitle')}
@@ -240,7 +240,7 @@ export default function LandingPage() {
         <div className="max-w-5xl mx-auto px-5">
           <p className="text-[11px] font-semibold text-[#E53E3E] tracking-[0.15em] uppercase text-center mb-3">For Everyone</p>
           <h2
-            className="text-3xl md:text-4xl font-bold text-center mb-12"
+            className="text-2xl md:text-[28px] font-bold text-center mb-12"
             style={{ wordBreak: 'keep-all' }}
           >
             {t('landing.targetsTitle')}
@@ -288,7 +288,7 @@ export default function LandingPage() {
       >
         <p className="text-[11px] font-semibold text-[#E53E3E] tracking-[0.15em] uppercase text-center mb-3">Tech Stack</p>
         <h2
-          className="text-3xl md:text-4xl font-bold text-center mb-14"
+          className="text-2xl md:text-[28px] font-bold text-center mb-14"
           style={{ wordBreak: 'keep-all' }}
         >
           {t('landing.techTitle')}
