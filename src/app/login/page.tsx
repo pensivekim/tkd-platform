@@ -44,22 +44,49 @@ function LoginPageInner() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
-      <div className="w-full max-w-sm">
+    <div style={{
+      minHeight: '100vh',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      background: '#0A0A0F',
+      fontFamily: "'Outfit', system-ui, sans-serif",
+      padding: '0 16px',
+    }}>
+      <div style={{ width: '100%', maxWidth: 360 }}>
         {/* 로고 */}
-        <div className="text-center mb-8">
-          <span className="text-4xl">🥋</span>
-          <h1 className="mt-2 text-2xl font-bold text-gray-900">{t('auth.loginTitle')}</h1>
-          <p className="mt-1 text-sm text-gray-500" style={{ wordBreak: 'keep-all' }}>
+        <div style={{ textAlign: 'center', marginBottom: 32 }}>
+          <div style={{ marginBottom: 12 }}>
+            <span style={{
+              fontFamily: "'Bebas Neue', sans-serif",
+              fontSize: 36,
+              letterSpacing: 4,
+              color: '#E9C46A',
+              lineHeight: 1,
+            }}>TKP</span>
+            <div style={{ fontSize: 11, color: '#404050', letterSpacing: 1, marginTop: 2 }}>DOJANGWAN</div>
+          </div>
+          <h1 style={{ fontSize: 18, fontWeight: 700, color: '#F0F0F5', margin: '0 0 6px' }}>
+            {t('auth.loginTitle')}
+          </h1>
+          <p style={{ fontSize: 13, color: '#606070', margin: 0, wordBreak: 'keep-all' }}>
             {t('auth.loginSubtitle')}
           </p>
         </div>
 
         {/* 로그인 폼 */}
-        <form onSubmit={handleSubmit} className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 space-y-4">
+        <form onSubmit={handleSubmit} style={{
+          background: '#0E0E18',
+          border: '1px solid rgba(255,255,255,0.07)',
+          borderRadius: 16,
+          padding: '28px 24px',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 16,
+        }}>
           <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-              {t('auth.email')}<span className="text-red-500 ml-1">*</span>
+            <label htmlFor="email" style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#909098', marginBottom: 6 }}>
+              {t('auth.email')} <span style={{ color: '#E63946' }}>*</span>
             </label>
             <input
               id="email"
@@ -70,13 +97,25 @@ function LoginPageInner() {
               onChange={(e) => setEmail(e.target.value)}
               disabled={isLoading}
               placeholder="example@dojang.com"
-              className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent disabled:bg-gray-50 disabled:text-gray-400"
+              style={{
+                width: '100%',
+                padding: '10px 12px',
+                background: 'rgba(255,255,255,0.04)',
+                border: '1px solid rgba(255,255,255,0.1)',
+                borderRadius: 8,
+                fontSize: 14,
+                color: '#F0F0F5',
+                outline: 'none',
+                boxSizing: 'border-box',
+              }}
+              onFocus={e => { e.target.style.borderColor = '#E63946'; e.target.style.boxShadow = '0 0 0 2px rgba(230,57,70,0.2)' }}
+              onBlur={e => { e.target.style.borderColor = 'rgba(255,255,255,0.1)'; e.target.style.boxShadow = 'none' }}
             />
           </div>
 
           <div>
-            <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
-              {t('auth.password')}<span className="text-red-500 ml-1">*</span>
+            <label htmlFor="password" style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#909098', marginBottom: 6 }}>
+              {t('auth.password')} <span style={{ color: '#E63946' }}>*</span>
             </label>
             <input
               id="password"
@@ -86,14 +125,35 @@ function LoginPageInner() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               disabled={isLoading}
-              placeholder={t('auth.password')}
-              className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent disabled:bg-gray-50 disabled:text-gray-400"
+              placeholder="••••••••"
+              style={{
+                width: '100%',
+                padding: '10px 12px',
+                background: 'rgba(255,255,255,0.04)',
+                border: '1px solid rgba(255,255,255,0.1)',
+                borderRadius: 8,
+                fontSize: 14,
+                color: '#F0F0F5',
+                outline: 'none',
+                boxSizing: 'border-box',
+              }}
+              onFocus={e => { e.target.style.borderColor = '#E63946'; e.target.style.boxShadow = '0 0 0 2px rgba(230,57,70,0.2)' }}
+              onBlur={e => { e.target.style.borderColor = 'rgba(255,255,255,0.1)'; e.target.style.boxShadow = 'none' }}
             />
           </div>
 
           {/* 에러 메시지 */}
           {error && (
-            <p className="text-sm text-red-600 bg-red-50 px-3 py-2 rounded-lg" style={{ wordBreak: 'keep-all' }}>
+            <p style={{
+              fontSize: 13,
+              color: '#E63946',
+              background: 'rgba(230,57,70,0.08)',
+              border: '1px solid rgba(230,57,70,0.2)',
+              borderRadius: 8,
+              padding: '10px 12px',
+              margin: 0,
+              wordBreak: 'keep-all',
+            }}>
               {error}
             </p>
           )}
@@ -101,11 +161,34 @@ function LoginPageInner() {
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full flex items-center justify-center gap-2 py-2.5 bg-red-600 text-white text-sm font-semibold rounded-lg hover:bg-red-700 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+            style={{
+              width: '100%',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 8,
+              padding: '12px',
+              background: isLoading ? 'rgba(230,57,70,0.4)' : '#E63946',
+              color: '#fff',
+              fontSize: 14,
+              fontWeight: 700,
+              borderRadius: 10,
+              border: 'none',
+              cursor: isLoading ? 'not-allowed' : 'pointer',
+              transition: 'background 0.15s',
+              marginTop: 4,
+            }}
           >
             {isLoading ? (
               <>
-                <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                <span style={{
+                  width: 16, height: 16,
+                  border: '2px solid rgba(255,255,255,0.3)',
+                  borderTopColor: '#fff',
+                  borderRadius: '50%',
+                  display: 'inline-block',
+                  animation: 'spin 0.7s linear infinite',
+                }} />
                 {t('auth.loggingIn')}
               </>
             ) : (
@@ -114,7 +197,7 @@ function LoginPageInner() {
           </button>
         </form>
 
-        <p className="mt-6 text-center text-xs text-gray-400">
+        <p style={{ marginTop: 24, textAlign: 'center', fontSize: 11, color: '#303040' }}>
           &copy; 2025 Genomic Inc. All rights reserved.
         </p>
       </div>
